@@ -108,12 +108,16 @@ final class OpenCodexProviderTests: XCTestCase {
     func testDescriptorsAndAcceptedLayoutDefaults() {
         let provider = OpenCodexProvider()
         let ids = ["codexSession", "codexWeekly", "claudeSession", "claudeWeekly", "grokWeekly",
-                   "geminiSession", "geminiWeekly", "kiroMonthly", "trend", "today", "yesterday", "last30"]
+                   "geminiSession", "geminiWeekly", "kiroMonthly", "theHiveCredits", "trend", "today", "yesterday", "last30"]
             .map { "opencodex.\($0)" }
         XCTAssertEqual(provider.widgetDescriptors.map(\.id), ids)
         XCTAssertTrue(Set(ids).isSubset(of: Set(DefaultLayout.metricIDs)))
         XCTAssertTrue(DefaultLayout.pinnedMetricIDs.filter { $0.hasPrefix("opencodex.") }.isEmpty)
-        XCTAssertEqual(DefaultLayout.expandedMetricIDs.filter { $0.hasPrefix("opencodex.") }, Array(ids.suffix(5)))
+        XCTAssertEqual(DefaultLayout.expandedMetricIDs.filter { $0.hasPrefix("opencodex.") },
+                       ["opencodex.kiroMonthly"] + Array(ids.suffix(4)))
+        let balance = provider.widgetDescriptors.first { $0.id == "opencodex.theHiveCredits" }
+        XCTAssertEqual(balance?.isSpendTile, false)
+        XCTAssertEqual(balance?.pinnable, true)
         XCTAssertTrue(provider.provider.links.isEmpty)
         XCTAssertEqual(provider.widgetDescriptors.prefix(8).flatMap(\.limitResources).count, 8)
     }
@@ -122,5 +126,24 @@ final class OpenCodexProviderTests: XCTestCase {
         OpenCodexAuthStore(files: FakeFiles([
             OpenCodexAuthStore.configPath: #"{"baseURL":"http://127.0.0.1:10101/hub/","adminToken":"test-token"}"#
         ]), environment: FakeEnvironment())
+    }
+
+    func testPortalCreditsStaySeparateFromSpendAndQuotaErrors() async throws {
+        let balance = MetricLine.values(label: "TheHive Credits", values: [.init(number: 12.34, kind: .dollars)])
+        for portalLine in [balance, .badge(label: "TheHive Credits", text: "Sign in", colorHex: "#888888")] {
+            let provider = OpenCodexProvider(authStore: authStore(), usageClient: OpenCodexUsageClient(
+                http: RoutingHTTPClient { request in
+                    HTTPResponse(statusCode: 200, headers: [:], body: request.url.path.hasSuffix("provider-quotas")
+                                 ? OpenCodexFixtures.quotas : OpenCodexFixtures.usage)
+                }), portalCredits: { portalLine })
+            let snapshot = await provider.refresh()
+            XCTAssertEqual(snapshot.line(label: "TheHive Credits"), portalLine)
+            XCTAssertNotNil(snapshot.line(label: "Codex 5h"))
+            XCTAssertNotNil(snapshot.usageHistory)
+            XCTAssertNil(snapshot.errorCategory)
+            let total = TotalSpendAggregator.total(for: .last30, providers: [provider.provider],
+                                                   snapshots: [provider.provider.id: snapshot])
+            XCTAssertEqual(total.totalUSD, 567.41515004, accuracy: 0.000001)
+        }
     }
 }

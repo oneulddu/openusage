@@ -49,6 +49,7 @@ enum DefaultLayout {
         "opencodex.codexSession", "opencodex.codexWeekly",
         "opencodex.claudeSession", "opencodex.claudeWeekly", "opencodex.grokWeekly",
         "opencodex.geminiSession", "opencodex.geminiWeekly", "opencodex.kiroMonthly",
+        "opencodex.theHiveCredits",
         "opencodex.trend", "opencodex.today", "opencodex.yesterday", "opencodex.last30",
 
         "openrouter.credits", "openrouter.balance",

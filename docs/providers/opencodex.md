@@ -18,6 +18,32 @@ Quota meters are visible by default. Kiro Monthly, the trend, and spend are unde
 Nothing is pinned to the menu bar by default; star any meter in Customize to pin it. Hub history
 already includes all connected devices, so OpenUsage never adds copies from other Macs through iCloud.
 
+## TheHive Remaining Credits
+
+Open **Settings → TheHive Credits → Sign In** (also available under **Customize → OpenCodex**).
+In the app's login window, sign in to Hive, open your organization's dashboard or billing page,
+then choose **Connect This Organization**. A successful read enables automatic balance refreshes
+alongside OpenCodex. The **TheHive Credits** row is enabled and always visible after Kiro Monthly,
+but is not pinned by default. It can be hidden, moved on demand, or starred like the other rows.
+Remaining credit is a balance, not spending, and never enters Total Spend.
+
+The integration reads the portal's USD balance endpoint, not an estimate based on local token use.
+It uses a dedicated persistent WebKit profile. Login cookies stay inside that profile; they are
+neither imported from Safari nor sent to the OpenCodex hub or iCloud. Only the selected organization
+identifier is kept in app preferences; the numeric balance appears in the app's normal snapshot
+cache and local read-only API. **Disconnect** clears this app's Hive profile and selection without
+touching browser logins or the Hive account. Reset All Settings preserves this connection, like
+other provider credentials.
+
+Expired/unauthorized sessions show a sign-in message. Unreadable responses show an error instead
+of treating missing data as zero. Sign in again from Settings when needed. Portal-side changes or
+embedded-browser restrictions on a login provider may require further compatibility work; this
+is not a published API-key endpoint. No payment, credit purchase, or auto-recharge action is made
+by the balance reader.
+
+For one-time setup, launching a stopped app with `--connect-thehive` opens the same login window;
+ordinary launches stay in the menu bar. Actual account verification requires the user to sign in.
+
 ## Setup
 
 For a chosen hub, create `~/.config/openusage/opencodex.json`:

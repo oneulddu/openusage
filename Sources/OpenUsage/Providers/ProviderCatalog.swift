@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 /// The installed provider set and its canonical order. Both the menu-bar app and one-shot CLI build
@@ -68,6 +69,12 @@ enum ProviderCatalog {
                 )
             }
         }
+        let portalCredits: (@MainActor () async -> MetricLine)?
+        if NSApp == nil {
+            portalCredits = nil
+        } else {
+            portalCredits = { await TheHivePortalSession.shared.creditLine() }
+        }
         providers += [
             CursorProvider(),
             AntigravityProvider(),
@@ -76,7 +83,8 @@ enum ProviderCatalog {
             GrokProvider(),
             OllamaProvider(),
             OpenCodeProvider(),
-            OpenCodexProvider(),
+            // A one-shot CLI has no browser application lifecycle. Only the menu-bar app hosts login.
+            OpenCodexProvider(portalCredits: portalCredits),
             OpenRouterProvider(),
             ZAIProvider()
         ]

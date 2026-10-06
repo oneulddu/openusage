@@ -229,6 +229,18 @@ final class WidgetDataStore {
         AppLog.info(.refresh, "batch end (\(durationMs)ms, \(refreshed) ok / \(failed) failed / \(cached) cached / \(backedOff) backed off)")
     }
 
+    /// Connection changes must clear a previous portal balance even when the hub is offline.
+    /// Other quotas/history and their last-refresh timestamp stay intact.
+    func updateTheHiveCredits(_ line: MetricLine) {
+        guard line.label == TheHivePortalBalance.metricLabel,
+              var snapshot = localSnapshots["opencodex"] else { return }
+        snapshot.lines.removeAll { $0.label == TheHivePortalBalance.metricLabel }
+        snapshot.lines.append(line)
+        localSnapshots["opencodex"] = snapshot
+        cache.store(snapshot)
+        rebuildRenderedSnapshots()
+    }
+
     /// Evaluate every visible, enabled metric for a quota pace milestone and post a notification for any
     /// that just crossed one. Driven from the periodic loop *after* `refreshAll`, so it catches pace
     /// worsening from time passing (not only from a fresh fetch). Deduped per metric per reset window by

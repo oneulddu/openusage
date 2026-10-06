@@ -6,15 +6,18 @@ final class OpenCodexProvider: ProviderRuntime {
     let authStore: OpenCodexAuthStore
     let usageClient: OpenCodexUsageClient
     let now: @Sendable () -> Date
+    let portalCredits: (@MainActor () async -> MetricLine)?
 
     init(
         authStore: OpenCodexAuthStore = OpenCodexAuthStore(),
         usageClient: OpenCodexUsageClient = OpenCodexUsageClient(),
-        now: @escaping @Sendable () -> Date = Date.init
+        now: @escaping @Sendable () -> Date = Date.init,
+        portalCredits: (@MainActor () async -> MetricLine)? = nil
     ) {
         self.authStore = authStore
         self.usageClient = usageClient
         self.now = now
+        self.portalCredits = portalCredits
     }
 
     var widgetDescriptors: [WidgetDescriptor] {
@@ -22,6 +25,8 @@ final class OpenCodexProvider: ProviderRuntime {
             WidgetDescriptor.percent(id: "opencodex.\(metric.id)", provider: provider, title: metric.title)
                 .exportingLimit(metric.id, unit: "percent")
         } + [
+            .values(id: "opencodex.theHiveCredits", provider: provider,
+                    title: TheHivePortalBalance.metricLabel, valueWord: "left"),
             .usageTrend(provider: provider)
                 .exportingHistory(scope: .accountWide, estimatedCost: true, sourceNote: OpenCodexUsageMapper.sourceNote)
         ] + WidgetDescriptor.spendTiles(provider: provider)
@@ -56,6 +61,7 @@ final class OpenCodexProvider: ProviderRuntime {
                 let category = (error as? CategorizedError)?.errorCategory ?? .other
                 AppLog.warn(LogTag.plugin("opencodex"), "optional usage history failed (\(category.rawValue)); quota meters retained")
             }
+            if let portalCredits { lines.append(await portalCredits()) }
             return .make(provider: provider, plan: nil, lines: lines, refreshedAt: refreshedAt, usageHistory: history)
         } catch {
             let category = (error as? CategorizedError)?.errorCategory ?? .other

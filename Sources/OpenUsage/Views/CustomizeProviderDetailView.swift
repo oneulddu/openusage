@@ -33,6 +33,7 @@ struct CustomizeProviderDetailView: View {
                 if let keyProvider = container.apiKeyProviders.first(where: { $0.provider.id == providerID }) {
                     APIKeysSection(provider: keyProvider)
                 }
+                if providerID == "opencodex" { TheHiveConnectionSection() }
                 if ProviderAccountID.family(of: providerID) == "codex" {
                     CodexPricingSection(providerIDs: container.registry.providers
                         .map(\.id)
