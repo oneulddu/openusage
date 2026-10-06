@@ -29,7 +29,7 @@ struct CodexPricingSection: View {
                             Text("Unavailable Model").tag(selectedModel)
                         }
                         ForEach(options) { option in
-                            Text(option.title).tag(option.id)
+                            Text(L10n.display(option.title)).tag(option.id)
                         }
                     }
                     .pickerStyle(.menu)
@@ -42,7 +42,7 @@ struct CodexPricingSection: View {
                     HStack(spacing: 6) {
                         MotionAwareProgressView(controlSize: .mini)
                             .accessibilityHidden(true)
-                        Text(activityLabel)
+                        Text(L10n.display(activityLabel))
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)

@@ -60,7 +60,7 @@ struct APIKeysSection: View {
             Text(provider.provider.displayName)
             Spacer(minLength: 8)
             statusDot
-            Button(isOpen ? "Done" : (status == .notSet ? "Add" : "Edit")) {
+            Button(L10n.display(isOpen ? "Done" : (status == .notSet ? "Add" : "Edit"))) {
                 toggleExpand()
             }
             .buttonStyle(.bordered)
@@ -106,7 +106,7 @@ struct APIKeysSection: View {
                 keyField(editable: false)
             }
             if let actionError {
-                Text(actionError)
+                Text(L10n.display(actionError))
                     .font(.caption)
                     .foregroundStyle(Theme.notice)
             }
@@ -171,14 +171,14 @@ struct APIKeysSection: View {
     }
 
     private func primaryButton(_ title: String, disabled: Bool, action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
+        Button(L10n.display(title), action: action)
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
             .disabled(disabled)
     }
 
     private func ghostButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
+        Button(L10n.display(title), action: action)
             .buttonStyle(.borderless)
             .controlSize(.small)
     }
@@ -293,6 +293,6 @@ private struct APIKeyField: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.borderless)
-        .accessibilityLabel(label)
+        .accessibilityLabel(L10n.display(label))
     }
 }

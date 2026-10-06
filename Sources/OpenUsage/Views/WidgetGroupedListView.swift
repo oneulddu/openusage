@@ -206,7 +206,7 @@ struct WidgetGroupedListView: View {
             id: expandedDividerID(for: providerID),
             in: .named(reorderSpaceName)
         )
-        .accessibilityLabel(isExpanded ? "Show less" : "Show more")
+        .accessibilityLabel(L10n.display(isExpanded ? "Show less" : "Show more"))
     }
 
     private func expandedDividerID(for providerID: String) -> String {
@@ -252,7 +252,7 @@ struct WidgetGroupedListView: View {
             layout.setMetricEnabled(descriptor.id, false)
         }
         if descriptor.pinnable {
-            Button(layout.isPinned(descriptor.id) ? "Unstar" : "Star for menu bar") {
+            Button(L10n.display(layout.isPinned(descriptor.id) ? "Unstar" : "Star for menu bar")) {
                 if layout.isPinned(descriptor.id) {
                     layout.setPinned(false, for: descriptor.id)
                 } else if layout.canPin(descriptor.id) {

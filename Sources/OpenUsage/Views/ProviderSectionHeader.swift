@@ -74,7 +74,7 @@ struct ProviderSectionHeader: View {
                 // precise age rides in the hover tooltip. Hidden while a refresh is in flight: the spinner
                 // already says "working on it".
                 if let staleness, !refreshing {
-                    Text(staleness.label)
+                    Text(L10n.display(staleness.label))
                         .font(.system(size: density.planBadgePointSize))
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
@@ -89,7 +89,7 @@ struct ProviderSectionHeader: View {
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(Theme.notice)
                     .hoverTooltip(warning)
-                    .accessibilityLabel(warning)
+                    .accessibilityLabel(L10n.display(warning))
             }
             Spacer(minLength: 8)
             if let onCopyScreenshot {

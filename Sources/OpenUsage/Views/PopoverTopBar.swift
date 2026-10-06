@@ -63,7 +63,7 @@ struct PopoverTopBar: View {
         @ViewBuilder trailing: () -> Trailing
     ) -> some View {
         ZStack {
-            Text(title)
+            Text(L10n.display(title))
                 .font(.headline)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)

@@ -27,7 +27,7 @@ struct UsageSparkline: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Text(data.title)
+            Text(L10n.display(data.title))
                 .font(.system(size: density.supportingPointSize, weight: .semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
@@ -64,7 +64,7 @@ struct UsageSparkline: View {
                 }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabel)
+        .accessibilityLabel(L10n.display(accessibilityLabel))
         .onDisappear { hover.dismiss() }
     }
 

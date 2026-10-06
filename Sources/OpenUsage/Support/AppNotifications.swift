@@ -83,9 +83,9 @@ final class AppNotifications: NSObject, UNUserNotificationCenterDelegate {
             }
         }
         let content = UNMutableNotificationContent()
-        content.title = title
-        content.subtitle = subtitle
-        content.body = body
+        content.title = L10n.display(title)
+        content.subtitle = L10n.display(subtitle)
+        content.body = L10n.display(body)
         // Group all OpenUsage alerts into one stacked thread so simultaneous alerts (e.g. a metric
         // that fires two milestones at once) collapse into a single banner with a "N more" summary
         // instead of separate banners.

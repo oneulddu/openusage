@@ -52,7 +52,7 @@ struct PopoverFooter: View {
         VStack(alignment: .leading, spacing: 0) {
             Text("OpenUsage \(AppInfo.version)")
             if let notice = layout.pinLimitNotice {
-                Text(notice)
+                Text(L10n.display(notice))
                     .foregroundStyle(Theme.notice)
                     .denyShake(trigger: layout.pinNoticeShakeTrigger, shakeOnAppear: true)
             } else {
@@ -70,7 +70,7 @@ struct PopoverFooter: View {
         } label: {
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 HStack(spacing: 5) {
-                    Text(updateStatusText(now: context.date))
+                    Text(L10n.display(updateStatusText(now: context.date)))
                         .monospacedDigit()
                         .contentTransition(.numericText())
                     if isUpdating {

@@ -89,7 +89,7 @@ struct ICloudSyncSettingsSection: View {
                     }
                 }
                 TimelineView(.periodic(from: .now, by: 60)) { context in
-                    Text("Updated \(relativeAge(document.updatedAt, now: context.date))")
+                    Text(L10n.display("Updated \(relativeAge(document.updatedAt, now: context.date))"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -102,7 +102,7 @@ struct ICloudSyncSettingsSection: View {
     }
 
     private func inlineNotice(_ text: String) -> some View {
-        Text(text)
+        Text(L10n.display(text))
             .font(.caption)
             .foregroundStyle(Theme.notice)
             .padding(.horizontal, 12)

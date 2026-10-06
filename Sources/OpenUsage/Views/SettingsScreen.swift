@@ -311,7 +311,7 @@ struct SettingsScreen: View {
     /// One trigger row: the setting label, an (i) info icon with a one-sentence tooltip, and the toggle.
     private func notifToggleRow(_ milestone: PaceMilestone, isOn: Binding<Bool>) -> some View {
         HStack(spacing: 6) {
-            Text(milestone.settingLabel)
+            Text(L10n.display(milestone.settingLabel))
             Image(systemName: "info.circle")
                 .imageScale(.small)
                 .foregroundStyle(.secondary)
@@ -338,7 +338,7 @@ struct SettingsScreen: View {
                     Task { await refreshNotificationsAuth() }
                 }
             } label: {
-                Text(notificationsAuth == .denied ? "Open System Settings" : "Allow Notifications")
+                Text(L10n.display(notificationsAuth == .denied ? "Open System Settings" : "Allow Notifications"))
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
@@ -462,7 +462,7 @@ struct SettingsScreen: View {
     /// Glass on macOS 26+, bordered fallback on macOS 15.
     private func logButton(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).frame(maxWidth: .infinity)
+            Text(L10n.display(title)).frame(maxWidth: .infinity)
         }
         .glassButtonStyle()
         .controlSize(.regular)
@@ -480,7 +480,7 @@ struct SettingsScreen: View {
         @ViewBuilder rows: () -> some View
     ) -> some View {
         VStack(alignment: .leading, spacing: density.headerToCardSpacing) {
-            Text(title)
+            Text(L10n.display(title))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 8)
@@ -495,7 +495,7 @@ struct SettingsScreen: View {
     /// as a Customize metric row so the cards share one rhythm.
     private func row(_ label: String, @ViewBuilder control: () -> some View) -> some View {
         HStack(spacing: 10) {
-            Text(label)
+            Text(L10n.display(label))
             Spacer(minLength: 8)
             control()
         }
@@ -507,7 +507,7 @@ struct SettingsScreen: View {
     /// General/Advanced error lines and the "this setting is paused" captions (Increase Transparency
     /// paused by a system accessibility setting, or by Party mode taking over the look).
     private func inlineNotice(_ text: String) -> some View {
-        Text(text)
+        Text(L10n.display(text))
             .font(.caption)
             .foregroundStyle(Theme.notice)
             .padding(.horizontal, 12)
@@ -524,7 +524,7 @@ struct SettingsScreen: View {
     ) -> some View {
         Picker("", selection: selection) {
             ForEach(options, id: \.self) { option in
-                Text(label(option)).tag(option)
+                Text(L10n.display(label(option))).tag(option)
             }
         }
         .pickerStyle(.menu)

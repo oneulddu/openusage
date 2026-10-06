@@ -246,7 +246,7 @@ struct RateLimitResetsDetail: View {
 
     private func row(_ entry: Entry) -> some View {
         HStack(spacing: 8) {
-            Text(entry.time)
+            Text(L10n.display(entry.time))
                 .font(.system(size: density.supportingPointSize))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
@@ -260,7 +260,7 @@ struct RateLimitResetsDetail: View {
             else if hoveredExpiry == entry.date { hoveredExpiry = nil }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(entry.accessibilityLabel)
+        .accessibilityLabel(L10n.display(entry.accessibilityLabel))
     }
 
     /// The trailing control on a resting node: the "Use" button when the row is claimable and hovered,
@@ -278,7 +278,7 @@ struct RateLimitResetsDetail: View {
                     .hoverTooltip(nothingToReset ? "Nothing to reset right now" : nil)
                     .transition(.opacity)
             } else if let countdown = entry.countdown {
-                Text(countdown)
+                Text(L10n.duration(countdown) ?? L10n.display(countdown))
                     .font(.system(size: density.supportingPointSize))
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
@@ -342,7 +342,7 @@ struct RateLimitResetsDetail: View {
                 .font(.system(size: 14))
                 .foregroundStyle(banner.tint)
                 .accessibilityHidden(true)
-            Text(banner.text)
+            Text(L10n.display(banner.text))
                 .font(.system(size: density.supportingPointSize, weight: .medium))
                 .foregroundStyle(banner.tint)
                 .fixedSize(horizontal: false, vertical: true)

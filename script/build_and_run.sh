@@ -87,6 +87,10 @@ shopt -s nullglob
 for bundle in "$BUILD_DIR"/*.bundle; do
   cp -R "$bundle" "$APP_RESOURCES/$(basename "$bundle")"
 done
+# Korean UI strings live in the main bundle so SwiftUI literals and L10n lookups resolve them.
+for lproj in "$ROOT_DIR"/assets/Localization/*.lproj; do
+  cp -R "$lproj" "$APP_RESOURCES/$(basename "$lproj")"
+done
 shopt -u nullglob
 
 # Compile the Icon Composer source (assets/AppIcon.icon) into Assets.car so
@@ -126,6 +130,13 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$TARGET_NAME</string>
   <key>CFBundleIdentifier</key>
   <string>$BUNDLE_ID</string>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>en</string>
+    <string>ko</string>
+  </array>
   <key>CFBundleName</key>
   <string>$APP_DISPLAY</string>
   <key>CFBundleDisplayName</key>

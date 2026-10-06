@@ -77,15 +77,15 @@ struct TotalSpendCard: View {
                     metricRawValue = option.rawValue
                 } label: {
                     if option == metric {
-                        Label(option.title, systemImage: "checkmark")
+                        Label(L10n.display(option.title), systemImage: "checkmark")
                     } else {
-                        Text(option.title)
+                        Text(L10n.display(option.title))
                     }
                 }
             }
         } label: {
             HStack(spacing: 4) {
-                Text(metric.title)
+                Text(L10n.display(metric.title))
                     .font(.system(size: density.headerPointSize, weight: .semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
@@ -168,7 +168,7 @@ struct TotalSpendCard: View {
         return Button {
             periodRawValue = candidate.rawValue
         } label: {
-            Text(candidate.shortLabel)
+            Text(L10n.display(candidate.shortLabel))
                 .font(.system(size: 11, weight: isSelected ? .semibold : .medium))
                 .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 .padding(.horizontal, 12)
@@ -191,7 +191,7 @@ struct TotalSpendCard: View {
     /// A metric/period combination with nothing to show mirrors the spend tiles' "No data" rule —
     /// never a fabricated zero ring.
     private var emptyState: some View {
-        Text(metric.emptyMessage)
+        Text(L10n.display(metric.emptyMessage))
             .font(.system(size: density.supportingPointSize))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
@@ -245,7 +245,7 @@ struct TotalSpendRingContent: View {
         }
         .frame(width: Self.ringDiameter, height: Self.ringDiameter)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabel)
+        .accessibilityLabel(L10n.display(accessibilityLabel))
     }
 
     private var accessibilityLabel: String {
@@ -297,7 +297,7 @@ struct TotalSpendRingContent: View {
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-            Text(center.unit)
+            Text(L10n.display(center.unit))
                 .font(.system(size: 9, weight: .medium))
                 .foregroundStyle(.tertiary)
                 .lineLimit(1)

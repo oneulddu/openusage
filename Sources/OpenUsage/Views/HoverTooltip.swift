@@ -25,7 +25,7 @@ extension View {
     /// shows nothing, so the many `someTooltip ?? ""` call sites keep their "no tooltip when blank"
     /// behavior. The text is also exposed as an accessibility hint — the part `.help()` gave VoiceOver.
     func hoverTooltip(_ text: String?) -> some View {
-        modifier(HoverTooltipModifier(text: text))
+        modifier(HoverTooltipModifier(text: L10n.display(text)))
     }
 }
 
@@ -435,7 +435,7 @@ private struct TooltipBubble: View {
 
     @ViewBuilder
     private var label: some View {
-        let content = Text(text)
+        let content = Text(L10n.display(text))
             .font(.system(size: 12))
             .foregroundStyle(.primary)
             .multilineTextAlignment(.center)

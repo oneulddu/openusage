@@ -260,11 +260,11 @@ final class StatusItemController: NSObject {
         if panel.isVisible { hidePanel() }
 
         let menu = NSMenu()
-        menu.addItem(ClosureMenuItem(title: "Settings", systemSymbol: "gearshape", keyEquivalent: ",") { [weak self] in
+        menu.addItem(ClosureMenuItem(title: L10n.text("Settings"), systemSymbol: "gearshape", keyEquivalent: ",") { [weak self] in
             self?.openSettings()
         })
         menu.addItem(.separator())
-        menu.addItem(ClosureMenuItem(title: "Quit OpenUsage", systemSymbol: "power", keyEquivalent: "q") {
+        menu.addItem(ClosureMenuItem(title: L10n.text("Quit OpenUsage"), systemSymbol: "power", keyEquivalent: "q") {
             NSApplication.shared.terminate(nil)
         })
 
