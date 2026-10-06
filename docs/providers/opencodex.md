@@ -5,7 +5,8 @@ and Kiro. Missing windows stay empty. If the hub combines multiple accounts, the
 that combined quota, and Codex Weekly only shows a reset time when a single account is included. It also shows a token usage trend and estimated spend for Today, Yesterday,
 and Last 30 Days. The trend keeps the hub's own 30 calendar days, and Today and Yesterday pick
 those days by this Mac's date, so they line up when the hub and the Mac share a time zone. Hub
-spend is left out of Total Spend because it already includes the other providers' requests.
+spend is included in Total Spend. Confirmed matching OpenCodex requests are removed from the
+native Codex log estimates before that sum is calculated (see below).
 
 Quota meters are visible by default. Kiro Monthly, the trend, and spend are under the card's caret.
 Nothing is pinned to the menu bar by default; star any meter in Customize to pin it. Hub history
@@ -39,3 +40,25 @@ Costs come from the hub and are estimates.
 
 Quota failures show a provider error. If only usage history fails, the quota meters remain available,
 spend rows show no data, and the failure is recorded in the app's log.
+
+## Removing Codex Overlap
+
+When a hub is configured, native Codex history is compared with its read-only
+`/api/request-history` endpoint. A match requires the hashed thread identity (or recorded parent
+identity for a subagent), the same model, exact input and output token counts, and a completion
+time within 30 seconds. Only an unambiguous one-to-one match is excluded. The Codex remainder is
+priced locally; OpenCodex retains the hub's own estimate. Quotas and reset actions are unchanged.
+
+Original session files are never changed or copied. Only compact request metadata is kept in
+memory, with paginated reads and incremental refreshes; it is discarded when the app exits.
+The first history scan may finish after the quota refresh and appear on the next refresh.
+Disabling the OpenCodex card hides its contribution to the total; it does not reassign confirmed
+hub requests to the native Codex card while the hub configuration remains present.
+
+This is conservative reconciliation, not a guarantee that all historical overlap can be removed.
+Missing identities, different token reporting, clock differences, ambiguous matches, a truncated
+ledger, or an unavailable hub leave the affected local usage in place with a warning. Other
+providers, pi/OpenCode records, and older iCloud peer histories are not reconciled by this native
+Codex matcher. The combined total displays an overlap note. Provider refreshes are independent,
+so recently completed requests can settle on a later refresh. No current model prefix or proxy
+configuration is used to classify past requests.

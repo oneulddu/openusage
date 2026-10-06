@@ -105,6 +105,7 @@ struct ModelUsageBreakdown: Hashable, Sendable, Codable {
 /// `SpendTileMapper.appendTokenUsage` needs to render the spend tiles with unknown-model warnings.
 /// Shared result shape of the native log scanners (Claude, Codex).
 struct LogUsageScan: Sendable {
+    var warning: String? = nil
     var series: DailyUsageSeries
     var modelUsage: ModelUsageSeries?
     /// `yyyy-MM-dd` day key → models without known pricing, whether excluded or estimated with a fallback.

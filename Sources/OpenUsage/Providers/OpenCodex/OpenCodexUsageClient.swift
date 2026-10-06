@@ -17,6 +17,17 @@ struct OpenCodexUsageClient: Sendable {
         return try await get(url, auth: auth)
     }
 
+    func fetchHistory(auth: OpenCodexAuth, conversationID: String, since: Date,
+                      until: Date, cursor: String? = nil) async throws -> Data {
+        var items = [URLQueryItem(name: "conversationId", value: conversationID),
+                     URLQueryItem(name: "from", value: String(Int(since.timeIntervalSince1970 * 1000))),
+                     URLQueryItem(name: "to", value: String(Int(until.timeIntervalSince1970 * 1000))),
+                     URLQueryItem(name: "limit", value: "100")]
+        if let cursor { items.append(URLQueryItem(name: "cursor", value: cursor)) }
+        let url = auth.baseURL.appendingPathComponent("api/request-history").appending(queryItems: items)
+        return try await get(url, auth: auth)
+    }
+
     private func get(_ url: URL, auth: OpenCodexAuth) async throws -> Data {
         let response: HTTPResponse
         do {

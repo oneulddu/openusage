@@ -196,8 +196,8 @@ final class CodexProvider: ProviderRuntime {
                 fallbackPricingModelsByDay: usage.fallbackPricingModelsByDay
             )
         }
-        let warning = history == nil ? "Local token history is still updating." : nil
-        if warning != nil {
+        let warning = history == nil ? "Local token history is still updating." : history?.warning
+        if history == nil {
             AppLog.warn(LogTag.plugin("codex"), "local history scan deferred; publishing live quota")
         }
         // Pending history is not evidence of no usage. The store may restore last-good spend rows.
@@ -211,6 +211,7 @@ final class CodexProvider: ProviderRuntime {
     private struct CodexLocalHistory: Sendable {
         var sourceNote: String
         var usageHistory: ProviderUsageHistory?
+        var warning: String? = nil
     }
 
     private static func historyClaims(
@@ -267,7 +268,7 @@ final class CodexProvider: ProviderRuntime {
         }
 
         AppLog.info(LogTag.plugin("codex"), "local history scan completed")
-        return CodexLocalHistory(sourceNote: baseNote, usageHistory: usageHistory)
+        return CodexLocalHistory(sourceNote: baseNote, usageHistory: usageHistory, warning: nativeScan?.warning)
     }
 
     private static func localUsageSourceNote(hasPi: Bool, hasOpenCode: Bool) -> String {

@@ -129,6 +129,12 @@ struct TotalSpendCard: View {
             } else {
                 TotalSpendRingContent(projection: projection)
             }
+            if total.slices.contains(where: { $0.provider.id == "opencodex" }), total.slices.count > 1 {
+                Text("Confirmed OpenCodex requests are excluded from Codex. Unmatched or other-provider history may overlap.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)

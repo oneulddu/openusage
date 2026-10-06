@@ -3,7 +3,7 @@ import XCTest
 
 @MainActor
 final class OpenCodexProviderTests: XCTestCase {
-    func testHubSpendIsExcludedFromTotalSpendToAvoidDoubleCounting() {
+    func testHubSpendIsIncludedInTotalSpend() {
         let suiteName = "OpenUsageTests.OpenCodexTotalSpend.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -11,8 +11,7 @@ final class OpenCodexProviderTests: XCTestCase {
             registry: .from([AntigravityProvider(), OpenCodexProvider()]),
             defaults: defaults, storageKey: "layout"
         )
-        // The hub already includes the Antigravity requests that card counts locally.
-        XCTAssertEqual(store.spendCapableProviders.map(\.id), ["antigravity"])
+        XCTAssertEqual(store.spendCapableProviders.map(\.id), ["antigravity", "opencodex"])
         XCTAssertTrue(store.placed.contains { $0.descriptorID == "opencodex.today" })
     }
 

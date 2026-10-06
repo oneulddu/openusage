@@ -366,3 +366,6 @@
 "Status" = "상태";
 "Dashboard" = "대시보드";
 "API Keys" = "API 키";
+"Only confirmed OpenCodex requests were excluded. Unmatched history may still overlap with the hub." = "확인된 OpenCodex 요청만 제외했어요. 대조되지 않은 기록은 허브 사용량과 겹칠 수 있어요.";
+"OpenCodex usage could not be checked. Codex history is unchanged and totals may overlap." = "OpenCodex 사용량을 대조하지 못했어요. Codex 기록을 유지해 합계에 중복이 있을 수 있어요.";
+"Confirmed OpenCodex requests are excluded from Codex. Unmatched or other-provider history may overlap." = "확인된 OpenCodex 요청은 Codex에서 제외해요. 미확인 기록이나 다른 서비스 기록은 중복될 수 있어요.";

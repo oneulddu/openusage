@@ -13,6 +13,7 @@ enum ProviderCatalog {
         // Default provider order (see AGENTS.md "## Providers"): the three established providers first,
         // then every other provider alphabetically by display name.
         var providers: [ProviderRuntime]
+        let hubReconciler = OpenCodexUsageReconciler()
         if claudeCards.isEmpty {
             providers = [ClaudeProvider()]
         } else {
@@ -49,7 +50,8 @@ enum ProviderCatalog {
                     writableAuthHomes: Set(codex.plainWritableAuthHomes),
                     piCredentialSources: codex.plainPiCredentialSources
                 ),
-                logUsageScanner: CodexLogUsageScanner(additionalHomes: codex.plainAuthHomes)
+                logUsageScanner: CodexLogUsageScanner(additionalHomes: codex.plainAuthHomes,
+                                                    hubReconciler: hubReconciler)
             ))
         } else {
             providers += codex.cards.map { card in
@@ -61,6 +63,7 @@ enum ProviderCatalog {
                         writableAuthHomes: Set(card.writableAuthHomes),
                         piCredentialSources: card.piCredentialSources
                     ),
+                    logUsageScanner: CodexLogUsageScanner(hubReconciler: hubReconciler),
                     historyScope: .account(card.identity, codex.historyHomes, claimsPiUsage: card.claimsPiUsage)
                 )
             }
