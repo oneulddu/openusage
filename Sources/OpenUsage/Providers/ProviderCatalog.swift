@@ -73,6 +73,7 @@ enum ProviderCatalog {
             GrokProvider(),
             OllamaProvider(),
             OpenCodeProvider(),
+            OpenCodexProvider(),
             OpenRouterProvider(),
             ZAIProvider()
         ]

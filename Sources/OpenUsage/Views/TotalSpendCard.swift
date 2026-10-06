@@ -388,6 +388,7 @@ enum TotalSpendPalette {
         "factory": dynamic(light: 0x48484A, dark: 0xC7C7CC),
         "kimi": hex(0x0A66FF),
         "minimax": hex(0xF5433C),
+        "opencodex": dynamic(light: 0x267D8D, dark: 0x64B8C8),
         "zai": dynamic(light: 0x2D2D2D, dark: 0xD1D1D6)
     ]
 

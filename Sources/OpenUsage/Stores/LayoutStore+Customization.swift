@@ -34,8 +34,16 @@ extension LayoutStore {
     /// "Today") must not.
     var spendCapableProviders: [Provider] {
         let capableIDs = Set(registry.descriptors.filter(\.isSpendTile).map(\.providerID))
-        return orderedProviders().filter { capableIDs.contains($0.id) && isProviderEnabled($0.id) }
+        return orderedProviders().filter {
+            capableIDs.contains($0.id) && isProviderEnabled($0.id)
+                && !Self.totalSpendExcludedProviderIDs.contains($0.id)
+        }
     }
+
+    /// Providers whose spend already aggregates other providers' usage. OpenCodex reports the whole
+    /// hub, which includes the Codex/Claude/Antigravity requests those cards also count locally, so
+    /// adding it to Total Spend would count the same tokens twice. Its own card still shows its spend.
+    static let totalSpendExcludedProviderIDs: Set<String> = ["opencodex"]
 
     // MARK: - Provider grouping
 

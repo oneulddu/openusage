@@ -213,6 +213,8 @@ final class LocalLimitsAPITests: XCTestCase {
             "grok": ["weekly"],
             "ollama": ["session", "weekly", "monthly"],
             "opencode": ["session", "weekly", "monthly"],
+            "opencodex": ["codexSession", "codexWeekly", "claudeSession", "claudeWeekly",
+                          "grokWeekly", "geminiSession", "geminiWeekly", "kiroMonthly"],
             "openrouter": ["credits", "balance", "keyLimit"],
             "zai": ["session", "weekly", "webSearches"]
         ]
