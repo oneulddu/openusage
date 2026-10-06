@@ -8,6 +8,12 @@ those days by this Mac's date, so they line up when the hub and the Mac share a 
 spend is included in Total Spend. Confirmed matching OpenCodex requests are removed from the
 native Codex log estimates before that sum is calculated (see below).
 
+Hover over Today, Yesterday, or Last 30 Days to see the hub's model costs, token counts, and shares
+for that period. Repeated model names are combined across providers and days. Small shares use the
+same Other row as the other services. Prices come directly from the hub, without local repricing.
+Missing model attribution is included in Other so the breakdown still accounts for the daily total;
+older responses without model details keep showing the total alone.
+
 Quota meters are visible by default. Kiro Monthly, the trend, and spend are under the card's caret.
 Nothing is pinned to the menu bar by default; star any meter in Customize to pin it. Hub history
 already includes all connected devices, so OpenUsage never adds copies from other Macs through iCloud.

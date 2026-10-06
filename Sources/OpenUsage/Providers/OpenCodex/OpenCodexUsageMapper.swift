@@ -88,6 +88,7 @@ enum OpenCodexUsageMapper {
         formatter.isLenient = false
         var seen: Set<String> = []
         var daily: [DailyUsageEntry] = []
+        var modelsByDay: [String: [ModelUsageEntry]] = [:]
         var totalTokens = 0
         var totalCost = 0.0
         for day in days {
@@ -100,7 +101,16 @@ enum OpenCodexUsageMapper {
             }
             let cost = try optionalNumber(day["estimatedCostUsd"])
             if let cost, cost < 0 { throw OpenCodexUsageError.invalidResponse }
-            daily.append(DailyUsageEntry(date: date, totalTokens: Int(tokens), costUSD: cost))
+            let entry = DailyUsageEntry(date: date, totalTokens: Int(tokens), costUSD: cost)
+            daily.append(entry)
+            if let rawModels = day["models"], !(rawModels is NSNull) {
+                do {
+                    modelsByDay[date] = try modelEntries(rawModels, day: entry)
+                } catch {
+                    // Breakdown metadata is optional. Preserve the authoritative daily total.
+                    AppLog.warn(LogTag.plugin("opencodex"), "invalid model breakdown; retaining daily total")
+                }
+            }
         }
         daily = Array(daily.sorted { $0.date < $1.date }.suffix(30))
         for entry in daily {
@@ -110,9 +120,54 @@ enum OpenCodexUsageMapper {
             guard !overflow, totalCost.isFinite else { throw OpenCodexUsageError.invalidResponse }
         }
         let series = DailyUsageSeries(daily: daily)
+        let hasModels = daily.contains { !(modelsByDay[$0.date] ?? []).isEmpty }
+        let modelUsage: ModelUsageSeries? = hasModels ? ModelUsageSeries(daily: daily.map { entry in
+            DailyModelUsageEntry(date: entry.date, models: modelsByDay[entry.date] ?? [
+                ModelUsageEntry(model: ModelUsageEntry.unattributedModelName,
+                                totalTokens: entry.totalTokens, costUSD: entry.costUSD)
+            ])
+        }) : nil
         SpendTileMapper.appendUsageTrend(series, to: &lines, now: now, note: sourceNote)
-        SpendTileMapper.appendTokenUsage(series, to: &lines, now: now, estimated: true)
-        return ProviderUsageHistory(series: series)
+        SpendTileMapper.appendTokenUsage(series, to: &lines, now: now, estimated: true,
+                                        modelUsage: modelUsage, modelSourceNote: sourceNote)
+        return ProviderUsageHistory(series: series, modelUsage: modelUsage)
+    }
+
+    /// Keep the hub's prices, including nil (unknown) costs. The shared mapper combines repeated
+    /// model names across days/providers and supplies the existing hover-panel behavior.
+    private static func modelEntries(_ raw: Any, day: DailyUsageEntry) throws -> [ModelUsageEntry] {
+        guard let rows = raw as? [[String: Any]] else { throw OpenCodexUsageError.invalidResponse }
+        var entries: [ModelUsageEntry] = []
+        var tokens = 0
+        var cost = 0.0
+        for row in rows {
+            guard let name = (row["model"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !name.isEmpty, let count = try optionalNumber(row["totalTokens"]),
+                  count >= 0, count.rounded(.down) == count, count < Double(Int.max) else {
+                throw OpenCodexUsageError.invalidResponse
+            }
+            let modelCost = try optionalNumber(row["estimatedCostUsd"])
+            if let modelCost, modelCost < 0 { throw OpenCodexUsageError.invalidResponse }
+            let (sum, overflow) = tokens.addingReportingOverflow(Int(count))
+            cost += modelCost ?? 0
+            guard !overflow, sum <= day.totalTokens, cost.isFinite else { throw OpenCodexUsageError.invalidResponse }
+            tokens = sum
+            entries.append(ModelUsageEntry(model: name, totalTokens: Int(count), costUSD: modelCost))
+        }
+        // A missing/partial breakdown must not make its named rows look like a complete total.
+        let remainderCost: Double?
+        if let totalCost = day.costUSD {
+            let tolerance = max(1e-8, totalCost * 1e-10)
+            guard cost <= totalCost + tolerance else { throw OpenCodexUsageError.invalidResponse }
+            remainderCost = totalCost - cost > tolerance ? totalCost - cost : 0
+        } else {
+            remainderCost = nil
+        }
+        if tokens < day.totalTokens || (remainderCost ?? 0) > 0 {
+            entries.append(ModelUsageEntry(model: ModelUsageEntry.unattributedModelName,
+                                           totalTokens: day.totalTokens - tokens, costUSD: remainderCost))
+        }
+        return entries
     }
 
     private static func optionalNumber(_ raw: Any?) throws -> Double? {
