@@ -40,7 +40,7 @@ struct ProviderLinksView: View {
             }
         } label: {
             HStack(spacing: 4) {
-                Text(link.label)
+                Text(L10n.display(link.label))
                     .font(.system(size: density.supportingPointSize, weight: .medium))
                     .lineLimit(1)
                 Image(systemName: "arrow.up.right")
@@ -51,6 +51,6 @@ struct ProviderLinksView: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .accessibilityLabel("\(link.label), opens in browser")
+        .accessibilityLabel(L10n.format("%@, opens in browser", L10n.display(link.label)))
     }
 }

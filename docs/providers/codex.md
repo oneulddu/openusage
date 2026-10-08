@@ -93,6 +93,11 @@ every card regardless.
 
 ## The spend tiles
 
+In this local fork, a configured OpenCodex hub is used to remove confirmed matching requests from
+native Codex spend and token history. Direct or unconfirmed usage stays in Codex; the hub's own
+cost is included separately in Total Spend. See [OpenCodex overlap handling](opencodex.md#removing-codex-overlap)
+for matching requirements and limits. This does not change the account's live quota meters.
+
 Copied sessions count once per card; a session copied into two accounts' folders counts on both. Synced history must match the card's account and workspace.
 
 **Customize → Codex → Cost Estimates → Fallback Model** optionally estimates usage that has no known price. The default is **None**. Choose a public model to use its rates for those estimates; known model prices and recorded costs remain unchanged. The existing unknown-model warning and tooltip remain visible when a fallback is used. Switching the choice recalculates local history without changing the model Codex runs. See [model pricing](../pricing.md) for details.

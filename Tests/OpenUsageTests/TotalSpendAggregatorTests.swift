@@ -50,6 +50,18 @@ final class TotalSpendAggregatorTests: XCTestCase {
         XCTAssertEqual(spend.centerValue, 9.75, accuracy: 0.0001)
     }
 
+    func testHubCostAndReconciledCodexRemainderAreBothIncluded() {
+        let hub = Provider(id: "opencodex", displayName: "OpenCodex", icon: .providerMark("opencodex"))
+        let snapshots = [
+            "codex": snapshot(codex, lines: [spendLine("Today", dollars: 2, tokens: 200)]),
+            "opencodex": snapshot(hub, lines: [spendLine("Today", dollars: 5, tokens: 700)])
+        ]
+        let total = TotalSpendAggregator.total(for: .today, providers: [codex, hub], snapshots: snapshots)
+        XCTAssertEqual(total.totalUSD, 7)
+        XCTAssertEqual(total.totalTokens, 900)
+        XCTAssertEqual(total.slices.map(\.id), ["codex", "opencodex"])
+    }
+
     func testProviderWithoutPeriodLineIsExcludedNotZero() {
         let snapshots = [
             "claude": snapshot(claude, lines: [spendLine("Today", dollars: 1.00)]),

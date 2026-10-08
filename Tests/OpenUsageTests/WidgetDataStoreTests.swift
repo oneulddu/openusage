@@ -3,6 +3,27 @@ import XCTest
 
 @MainActor
 final class WidgetDataStoreTests: XCTestCase {
+    func testDisconnectClearsPortalBalanceWithoutRefetchingHub() async {
+        let provider = Provider(id: "opencodex", displayName: "OpenCodex", icon: .providerMark("opencodex"))
+        let descriptor = WidgetDescriptor.values(id: "opencodex.theHiveCredits", provider: provider, title: "TheHive Credits")
+        let timestamp = Date(timeIntervalSince1970: 1_791_300_000)
+        let quota = MetricLine.progress(label: "Codex 5h", used: 20, limit: 100, format: .percent)
+        let runtime = TestProviderRuntime(provider: provider, descriptors: [descriptor], snapshot: ProviderSnapshot(
+            providerID: provider.id, displayName: provider.displayName, lines: [quota,
+                .values(label: "TheHive Credits", values: [.init(number: 12, kind: .dollars)])], refreshedAt: timestamp))
+        let defaults = makeUserDefaults("hive-disconnect")
+        let cache = ProviderSnapshotCache(userDefaults: defaults, storageKey: "snapshots")
+        let store = WidgetDataStore(registry: WidgetRegistry(providers: [provider], descriptors: [descriptor]),
+                                   providers: [runtime], cache: cache, defaults: defaults)
+        await store.refreshAll()
+        let signedOut = MetricLine.badge(label: "TheHive Credits", text: "Sign In Required", colorHex: "#888888")
+        store.updateTheHiveCredits(signedOut)
+        XCTAssertEqual(store.snapshots["opencodex"]?.line(label: "TheHive Credits"), signedOut)
+        XCTAssertEqual(store.snapshots["opencodex"]?.line(label: "Codex 5h"), quota)
+        XCTAssertEqual(store.snapshots["opencodex"]?.refreshedAt, timestamp)
+        XCTAssertEqual(cache.loadSnapshots(providerIDs: ["opencodex"])["opencodex"]?.line(label: "TheHive Credits"), signedOut)
+    }
+
     func testResolvesProgressSnapshotIntoWidgetData() async {
         let provider = Provider(id: "test", displayName: "Test", icon: .providerMark("codex"))
         let descriptor = WidgetDescriptor(

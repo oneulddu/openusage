@@ -77,15 +77,15 @@ struct TotalSpendCard: View {
                     metricRawValue = option.rawValue
                 } label: {
                     if option == metric {
-                        Label(option.title, systemImage: "checkmark")
+                        Label(L10n.display(option.title), systemImage: "checkmark")
                     } else {
-                        Text(option.title)
+                        Text(L10n.display(option.title))
                     }
                 }
             }
         } label: {
             HStack(spacing: 4) {
-                Text(metric.title)
+                Text(L10n.display(metric.title))
                     .font(.system(size: density.headerPointSize, weight: .semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
@@ -129,6 +129,12 @@ struct TotalSpendCard: View {
             } else {
                 TotalSpendRingContent(projection: projection)
             }
+            if total.slices.contains(where: { $0.provider.id == "opencodex" }), total.slices.count > 1 {
+                Text("Confirmed OpenCodex requests are excluded from Codex. Unmatched or other-provider history may overlap.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
@@ -168,7 +174,7 @@ struct TotalSpendCard: View {
         return Button {
             periodRawValue = candidate.rawValue
         } label: {
-            Text(candidate.shortLabel)
+            Text(L10n.display(candidate.shortLabel))
                 .font(.system(size: 11, weight: isSelected ? .semibold : .medium))
                 .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 .padding(.horizontal, 12)
@@ -191,7 +197,7 @@ struct TotalSpendCard: View {
     /// A metric/period combination with nothing to show mirrors the spend tiles' "No data" rule —
     /// never a fabricated zero ring.
     private var emptyState: some View {
-        Text(metric.emptyMessage)
+        Text(L10n.display(metric.emptyMessage))
             .font(.system(size: density.supportingPointSize))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
@@ -245,7 +251,7 @@ struct TotalSpendRingContent: View {
         }
         .frame(width: Self.ringDiameter, height: Self.ringDiameter)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabel)
+        .accessibilityLabel(L10n.display(accessibilityLabel))
     }
 
     private var accessibilityLabel: String {
@@ -297,7 +303,7 @@ struct TotalSpendRingContent: View {
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-            Text(center.unit)
+            Text(L10n.display(center.unit))
                 .font(.system(size: 9, weight: .medium))
                 .foregroundStyle(.tertiary)
                 .lineLimit(1)
@@ -388,6 +394,7 @@ enum TotalSpendPalette {
         "factory": dynamic(light: 0x48484A, dark: 0xC7C7CC),
         "kimi": hex(0x0A66FF),
         "minimax": hex(0xF5433C),
+        "opencodex": dynamic(light: 0x267D8D, dark: 0x64B8C8),
         "zai": dynamic(light: 0x2D2D2D, dark: 0xD1D1D6)
     ]
 

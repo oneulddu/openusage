@@ -90,6 +90,13 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItemController = StatusItemController(container: container, updater: updater)
         // Starts background update checks (release build only; dormant under preview/`swift run`).
         updater.start()
+        // Optional one-time setup entry point; ordinary launches never open a login window.
+        if ProcessInfo.processInfo.arguments.contains("--connect-thehive") {
+            TheHivePortalSession.shared.showLogin {
+                container.dataStore.updateTheHiveCredits(TheHivePortalSession.shared.currentCreditLine)
+                Task { await container.dataStore.refresh(providerID: "opencodex", force: true) }
+            }
+        }
     }
 
     /// Flush queued telemetry on quit. The SDK's lifecycle autocapture is off (we emit our own daily

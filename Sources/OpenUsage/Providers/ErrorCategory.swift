@@ -266,3 +266,23 @@ extension AntigravityError: CategorizedError {
         }
     }
 }
+
+extension OpenCodexAuthError: CategorizedError {
+    var errorCategory: ErrorCategory {
+        switch self {
+        case .notConfigured: .notLoggedIn
+        case .invalidConfiguration, .invalidToken: .authInvalid
+        case .credentialAccess: .credentialAccess
+        }
+    }
+}
+
+extension OpenCodexUsageError: CategorizedError {
+    var errorCategory: ErrorCategory {
+        switch self {
+        case .connectionFailed: .network
+        case .requestFailed(let status): ErrorCategory.http(status)
+        case .invalidResponse: .decoding
+        }
+    }
+}

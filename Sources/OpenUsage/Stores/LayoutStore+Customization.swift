@@ -34,7 +34,9 @@ extension LayoutStore {
     /// "Today") must not.
     var spendCapableProviders: [Provider] {
         let capableIDs = Set(registry.descriptors.filter(\.isSpendTile).map(\.providerID))
-        return orderedProviders().filter { capableIDs.contains($0.id) && isProviderEnabled($0.id) }
+        return orderedProviders().filter {
+            capableIDs.contains($0.id) && isProviderEnabled($0.id)
+        }
     }
 
     // MARK: - Provider grouping

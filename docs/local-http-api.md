@@ -116,6 +116,7 @@ is still 0 because OpenCode reports whole percentages.
 | Grok | `weekly` |
 | Ollama | `session`, `weekly`, `monthly` |
 | OpenCode | `session`, `weekly`, `monthly` |
+| OpenCodex | `codexSession`, `codexWeekly`, `claudeSession`, `claudeWeekly`, `grokWeekly`, `geminiSession`, `geminiWeekly`, `kiroMonthly` |
 | OpenRouter | `credits`, `balance`, `keyLimit` |
 | Z.ai | `session`, `weekly`, `webSearches` |
 

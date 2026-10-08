@@ -41,7 +41,7 @@ struct CopyFeedbackButton: View {
         .opacity(isRevealed || copied ? 1 : 0)
         .allowsHitTesting(isRevealed || copied)
         .animation(.easeOut(duration: 0.12), value: isRevealed)
-        .accessibilityLabel(accessibilityLabel)
+        .accessibilityLabel(L10n.display(accessibilityLabel))
         .onDisappear {
             resetTask?.cancel()
             resetTask = nil

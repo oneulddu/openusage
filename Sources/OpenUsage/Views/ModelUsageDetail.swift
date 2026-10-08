@@ -39,7 +39,7 @@ struct ModelUsageDetail: View {
     }
 
     private var header: some View {
-        Text(title)
+        Text(L10n.display(title))
             .font(.system(size: density.headerPointSize, weight: .semibold))
             .foregroundStyle(.primary)
     }
@@ -50,7 +50,7 @@ struct ModelUsageDetail: View {
     private func modelRow(_ model: ModelUsageEntry, share: Double, percent: Int) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(model.model)
+                Text(L10n.display(model.model))
                     .font(.system(size: density.supportingPointSize, weight: .semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
@@ -70,10 +70,10 @@ struct ModelUsageDetail: View {
                 Text("\(percent)%")
                     .monospacedDigit()
                 Spacer(minLength: 8)
-                Text(MetricFormatter.string(
+                Text(L10n.display(MetricFormatter.string(
                     for: MetricValue(number: Double(model.totalTokens), kind: .count, label: "tokens"),
                     style: .row
-                ))
+                )))
                 .monospacedDigit()
             }
             .font(.system(size: density.supportingPointSize))

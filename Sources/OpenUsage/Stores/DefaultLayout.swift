@@ -46,6 +46,12 @@ enum DefaultLayout {
         "opencode.session", "opencode.weekly", "opencode.monthly", "opencode.trend",
         "opencode.today", "opencode.yesterday", "opencode.last30",
 
+        "opencodex.codexSession", "opencodex.codexWeekly",
+        "opencodex.claudeSession", "opencodex.claudeWeekly", "opencodex.grokWeekly",
+        "opencodex.geminiSession", "opencodex.geminiWeekly", "opencodex.kiroMonthly",
+        "opencodex.theHiveCredits",
+        "opencodex.trend", "opencodex.today", "opencodex.yesterday", "opencodex.last30",
+
         "openrouter.credits", "openrouter.balance",
         "openrouter.today", "openrouter.week", "openrouter.month", "openrouter.keyLimit",
 
@@ -118,6 +124,8 @@ enum DefaultLayout {
         // OpenCode: the three Go caps (Session/Weekly/Monthly) and Usage Trend stay above the fold —
         // matching every other provider — with the spend tiles (Today/Yesterday/Last 30 Days) below.
         "opencode.today", "opencode.yesterday", "opencode.last30",
+        "opencodex.kiroMonthly", "opencodex.trend",
+        "opencodex.today", "opencodex.yesterday", "opencodex.last30",
         // OpenRouter: Credits meter + Balance stay above the fold; period spend and the per-key cap
         // sit below the caret.
         "openrouter.today", "openrouter.week", "openrouter.month", "openrouter.keyLimit",

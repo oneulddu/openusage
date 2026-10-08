@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 /// The installed provider set and its canonical order. Both the menu-bar app and one-shot CLI build
@@ -13,6 +14,7 @@ enum ProviderCatalog {
         // Default provider order (see AGENTS.md "## Providers"): the three established providers first,
         // then every other provider alphabetically by display name.
         var providers: [ProviderRuntime]
+        let hubReconciler = OpenCodexUsageReconciler()
         if claudeCards.isEmpty {
             providers = [ClaudeProvider()]
         } else {
@@ -49,7 +51,8 @@ enum ProviderCatalog {
                     writableAuthHomes: Set(codex.plainWritableAuthHomes),
                     piCredentialSources: codex.plainPiCredentialSources
                 ),
-                logUsageScanner: CodexLogUsageScanner(additionalHomes: codex.plainAuthHomes)
+                logUsageScanner: CodexLogUsageScanner(additionalHomes: codex.plainAuthHomes,
+                                                    hubReconciler: hubReconciler)
             ))
         } else {
             providers += codex.cards.map { card in
@@ -61,9 +64,16 @@ enum ProviderCatalog {
                         writableAuthHomes: Set(card.writableAuthHomes),
                         piCredentialSources: card.piCredentialSources
                     ),
+                    logUsageScanner: CodexLogUsageScanner(hubReconciler: hubReconciler),
                     historyScope: .account(card.identity, codex.historyHomes, claimsPiUsage: card.claimsPiUsage)
                 )
             }
+        }
+        let portalCredits: (@MainActor () async -> MetricLine)?
+        if NSApp == nil {
+            portalCredits = nil
+        } else {
+            portalCredits = { await TheHivePortalSession.shared.creditLine() }
         }
         providers += [
             CursorProvider(),
@@ -73,6 +83,8 @@ enum ProviderCatalog {
             GrokProvider(),
             OllamaProvider(),
             OpenCodeProvider(),
+            // A one-shot CLI has no browser application lifecycle. Only the menu-bar app hosts login.
+            OpenCodexProvider(portalCredits: portalCredits),
             OpenRouterProvider(),
             ZAIProvider()
         ]

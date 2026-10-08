@@ -7,6 +7,7 @@ What the app does and how it behaves. These pages describe **behavior, not visua
 - [Dashboard](dashboard.md) — the popover: rows, toggles, reordering, keyboard shortcuts
 - [Menu bar](menu-bar.md) — pinning metrics into the menu bar
 - [Settings](settings.md) — every option, what it changes
+- [Language](localization.md) — Korean support in the local OpenCodex build
 - [Refreshing & caching](refreshing.md) — when data updates and what happens when a fetch fails
 - [iCloud Sync](icloud-sync.md) — how spend history is combined across Macs
 - [Model pricing](pricing.md) — how spend tiles price tokens, and where the rates come from
@@ -32,6 +33,7 @@ What each provider tracks, where its credentials come from, and what to do when 
 - [Grok](providers/grok.md)
 - [Ollama](providers/ollama.md)
 - [OpenCode](providers/opencode.md)
+- [OpenCodex](providers/opencodex.md)
 - [OpenRouter](providers/openrouter.md)
 - [Z.ai](providers/zai.md)
 

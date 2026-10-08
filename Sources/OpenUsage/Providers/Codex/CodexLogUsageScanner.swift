@@ -57,11 +57,12 @@ actor CodexLogUsageScanner {
     private let homeDirectory: @Sendable () -> URL
     private let scanner: IncrementalJSONLScanner<Event>
     private let additionalHomes: [String]
+    private let hubReconciler: OpenCodexUsageReconciler?
 
     /// One turn's token usage, normalized from a `token_count` line (deltas already applied).
     /// `isFast` and `isUltrafast` record the service tier when the turn ran, tracked from the
     /// session's own log; absent tier metadata means standard.
-    struct Event: Codable, Sendable, Equatable {
+    struct Event: Codable, Sendable, Hashable {
         var timestamp: Date
         var model: String
         var pricingModel: String? = nil
@@ -72,13 +73,15 @@ actor CodexLogUsageScanner {
         var total: Int
         var isFast: Bool = false
         var isUltrafast: Bool = false
+        var sessionID: String? = nil
+        var parentSessionID: String? = nil
     }
 
     /// Multi-account cards that resolve the same Codex homes share this actor and parse each rollout
     /// once. The version is the parser schema version; bump it when `Event` semantics change.
     private static let sharedScanner = IncrementalJSONLScanner<Event>(
         logTag: LogTag.plugin("codex"),
-        persistence: JSONLScanCachePersistence(namespace: "codex", schemaVersion: 5)
+        persistence: JSONLScanCachePersistence(namespace: "codex", schemaVersion: 6)
     )
 
     static func flushPersistentCacheWrites() async {
@@ -89,12 +92,14 @@ actor CodexLogUsageScanner {
         environment: EnvironmentReading = ProcessEnvironmentReader(),
         homeDirectory: @escaping @Sendable () -> URL = { FileManager.default.homeDirectoryForCurrentUser },
         incrementalScanner: IncrementalJSONLScanner<Event>? = nil,
-        additionalHomes: [String] = []
+        additionalHomes: [String] = [],
+        hubReconciler: OpenCodexUsageReconciler? = nil
     ) {
         self.environment = environment
         self.homeDirectory = homeDirectory
         self.scanner = incrementalScanner ?? Self.sharedScanner
         self.additionalHomes = additionalHomes
+        self.hubReconciler = hubReconciler
     }
 
     /// Scan the last `daysBack` days of rollouts in every Codex home.
@@ -129,7 +134,13 @@ actor CodexLogUsageScanner {
             initialState: CodexLogFileParser(),
             parse: { data, state in state.parse(data) }
         ), !Task.isCancelled else { return nil }
-        return Self.aggregate(events: events, since: since, pricing: pricing, fallbackModel: fallbackModel)
+        let recent = events.filter { $0.timestamp >= since }
+        let reconciled = await hubReconciler?.reconcile(events: recent, since: since, now: now)
+        guard !Task.isCancelled else { return nil }
+        var result = Self.aggregate(events: reconciled?.events ?? recent, since: since,
+                                    pricing: pricing, fallbackModel: fallbackModel)
+        result.warning = reconciled?.warning
+        return result
     }
 
     // MARK: - Discovery

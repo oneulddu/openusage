@@ -33,6 +33,7 @@ struct CustomizeProviderDetailView: View {
                 if let keyProvider = container.apiKeyProviders.first(where: { $0.provider.id == providerID }) {
                     APIKeysSection(provider: keyProvider)
                 }
+                if providerID == "opencodex" { TheHiveConnectionSection() }
                 if ProviderAccountID.family(of: providerID) == "codex" {
                     CodexPricingSection(providerIDs: container.registry.providers
                         .map(\.id)
@@ -58,7 +59,7 @@ struct CustomizeProviderDetailView: View {
 
     private func metricSection(_ title: String, metrics: [WidgetDescriptor], providerID: String) -> some View {
         VStack(alignment: .leading, spacing: density.headerToCardSpacing) {
-            Text(title)
+            Text(L10n.display(title))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 8)

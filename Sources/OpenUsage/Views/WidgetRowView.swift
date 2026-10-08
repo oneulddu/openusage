@@ -118,7 +118,7 @@ struct WidgetRowView: View {
     /// Hovering shows the pace projection at reset. The warning gets the space; the title truncates.
     private func boundedLabelRow(_ state: WidgetData.MeterState) -> some View {
         HStack(spacing: 6) {
-            Text(data.title)
+            Text(L10n.display(data.title))
                 .font(labelFont)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
@@ -145,7 +145,7 @@ struct WidgetRowView: View {
                          action: eta == nil ? nil : onToggleResetDisplay)
         case .closeToLimit(let spare, _):
             Spacer(minLength: 8)
-            Text(spare)
+            Text(L10n.display(spare))
                 .font(supportingFont)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -158,7 +158,7 @@ struct WidgetRowView: View {
             // already *is* the projection the amber case hides in its tooltip.
             if let projection = state.tooltip {
                 Spacer(minLength: 8)
-                Text(projection)
+                Text(L10n.display(projection))
                     .font(supportingFont)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -183,7 +183,7 @@ struct WidgetRowView: View {
                 .foregroundStyle(severityColor(state.severity))
                 .accessibilityHidden(true) // the warning text alongside carries the message
             if let text {
-                Text(text)
+                Text(L10n.display(text))
                     .font(supportingFont)
                     .lineLimit(1)
                     .fixedSize(horizontal: true, vertical: false)
@@ -191,7 +191,7 @@ struct WidgetRowView: View {
         }
         .foregroundStyle(.secondary)
         .hoverTooltip(state.tooltip)
-        .accessibilityLabel(accessibility)
+        .accessibilityLabel(L10n.display(accessibility))
 
         if let action {
             Button(action: action) { label }
@@ -226,14 +226,14 @@ struct WidgetRowView: View {
     private var headlineText: some View {
         if data.hasMeterStyleToggle, let onToggleMeterStyle {
             Button(action: onToggleMeterStyle) {
-                Text(data.headline)
+                Text(L10n.display(data.headline))
                     .foregroundStyle(.primary)
                     .contentTransition(.numericText())
             }
             .buttonStyle(.plain)
             .hoverTooltip(data.meterStyleTooltip)
         } else {
-            Text(data.headline)
+            Text(L10n.display(data.headline))
                 .foregroundStyle(.primary)
                 .contentTransition(.numericText())
         }
@@ -247,12 +247,12 @@ struct WidgetRowView: View {
         if let text = data.boundedTrailingText() {
             if data.hasResetLabel(), let onToggleResetDisplay {
                 Button(action: onToggleResetDisplay) {
-                    Text(text).foregroundStyle(.secondary)
+                    Text(L10n.display(text)).foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
                 .hoverTooltip(data.resetTooltip())
             } else {
-                Text(text).foregroundStyle(.secondary)
+                Text(L10n.display(text)).foregroundStyle(.secondary)
                     .hoverTooltip(data.resetTooltip())
             }
         }
@@ -301,7 +301,7 @@ struct WidgetRowView: View {
             VStack(alignment: .trailing, spacing: 2) {
                 HStack(spacing: 4) {
                     expiryStatusDot
-                    Text(data.unboundedDetail)
+                    Text(L10n.display(data.unboundedDetail))
                         .font(supportingFont)
                         .foregroundStyle(.primary) // the value is the row's payload — match the bounded headline
                         .contentTransition(.numericText())
@@ -320,7 +320,7 @@ struct WidgetRowView: View {
                 if let subtitle = data.unboundedSubtitle {
                     // Secondary, not tertiary: the subtitle is informational ("on-device estimate"),
                     // and tertiary is reserved for inactive content on glass.
-                    Text(subtitle)
+                    Text(L10n.display(subtitle))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -398,7 +398,7 @@ struct WidgetRowView: View {
             Circle()
                 .fill(severityColor(severity))
                 .frame(width: 6, height: 6)
-                .accessibilityLabel(expiryStatusAccessibilityLabel(severity))
+                .accessibilityLabel(L10n.display(expiryStatusAccessibilityLabel(severity)))
         }
     }
 
@@ -412,7 +412,7 @@ struct WidgetRowView: View {
 
     private var labelColumn: some View {
         HStack(spacing: 4) {
-            Text(data.title)
+            Text(L10n.display(data.title))
                 // Same point size as the trailing value so the single-line row reads tight;
                 // semibold alone keeps the name/value hierarchy.
                 .font(.system(size: density.supportingPointSize, weight: .semibold))
