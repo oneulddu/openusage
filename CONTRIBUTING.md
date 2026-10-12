@@ -1,5 +1,7 @@
 # Contributing to OpenUsage
 
+These guidelines apply to the personal fork `oneulddu/openusage`. Owner-authorized changes may merge after relevant verification; no fixed number of maintainer approvals is required. Screenshots are optional supporting evidence, including for visual changes. Report any verification that could not be completed. Contributions to `robinebers/openusage` follow that repository's own rules.
+
 OpenUsage accepts contributions through a strict, issue-first workflow, and the quality bar is deliberately high. **By design, most external pull requests are closed** — automation closes any that don't follow the rules below. Read this entire document before opening a PR.
 
 ## Philosophy
@@ -14,7 +16,7 @@ If you're unsure whether your idea fits, open an issue first. External pull requ
 - **Most external PRs get closed, by design.** It's not personal — it keeps a small, focused project sane. See the Pull Request Policy below.
 - No feature creep. If it's not about usage tracking, it doesn't belong here.
 - No AI-generated commit messages. Write your own.
-- Test your changes. If it touches UI, include before/after screenshots.
+- Test your changes. Include before/after screenshots when they help explain UI changes.
 - Keep it simple. Don't over-engineer.
 - One PR per concern. Don't bundle unrelated changes.
 - Match the existing design language. OpenUsage has a specific look and feel — [AGENTS.md](AGENTS.md) documents the display conventions.
@@ -26,7 +28,7 @@ External pull requests are gatekept automatically and **closed** if they:
 - **Have no approved issue** — they don't link an open issue labeled `approved`.
 - **Aren't assigned to the author** — the PR author isn't one of the approved issue's assignees.
 
-Approved external PRs that add more than 1,000 lines receive an automatic warning encouraging a smaller, more focused change; deletions don't count toward that threshold, and the PR stays open. Visual changes still require before/after screenshots, which maintainers check during review.
+Approved external PRs that add more than 1,000 lines receive an automatic warning encouraging a smaller, more focused change; deletions don't count toward that threshold, and the PR stays open.
 
 Closures aren't personal and are reversible: get the issue approved and assigned to you, then reopen or open a focused replacement. Maintainers, collaborators, and Dependabot may open PRs directly, and maintainers can override the automation with the `keep-open` label.
 
@@ -37,6 +39,8 @@ By submitting a pull request, you agree that your contribution is licensed under
 ## How to Contribute
 
 ### Fork and PR workflow
+
+The issue approval steps below apply to external contributors. Owners, maintainers, and collaborators may open PRs directly, as described in the Pull Request Policy above.
 
 1. Open or comment on an issue describing the change, and tell maintainers you'd like to work on it
 2. Wait for a maintainer to approve the issue with the `approved` label and assign it to you
@@ -56,7 +60,7 @@ Each provider is a small Swift module under `Sources/OpenUsage/Providers/<Name>/
 4. Add focused tests under `Tests/OpenUsageTests/`
 5. Add a provider page in `docs/providers/` (metrics, credential sources, endpoints, troubleshooting)
 6. Test it locally with `./script/build_and_run.sh`
-7. Open a PR with screenshots showing it working
+7. Open a PR describing verification; add screenshots when useful
 
 You can also [open an issue](https://github.com/robinebers/openusage/issues/new?template=new_provider.yml) to request a provider without building it yourself.
 
@@ -64,7 +68,7 @@ You can also [open an issue](https://github.com/robinebers/openusage/issues/new?
 
 1. Reference the approved issue assigned to you in your PR
 2. Describe the root cause and fix
-3. Include before/after screenshots for UI bugs
+3. Describe the observed and expected behavior; add before/after screenshots when useful
 4. Add a regression test if applicable
 
 ### Request a feature
@@ -97,14 +101,15 @@ Don't open a PR for a feature without an approved issue assigned to you first. [
 - UI copy is plain language and sentence case
 - No new dependencies without justification
 
-## Maintainers
+## Fork Owner And Upstream Maintainers
+
+[@oneulddu](https://github.com/oneulddu) owns this personal fork. Upstream maintainers are listed below for attribution, not as required reviewers of this fork:
 
 - [@robinebers](https://github.com/robinebers) (lead)
 - [@validatedev](https://github.com/validatedev)
 - [@davidarny](https://github.com/davidarny)
 
-All PRs require approval from at least 2 maintainers before merging.
-Release tags (`v*`) are owner-managed and can only be created by [@robinebers](https://github.com/robinebers).
+Release tags (`v*`) remain owner-managed. In this fork, version changes and releases require explicit approval from @oneulddu; upstream releases remain managed by @robinebers.
 
 ## Questions?
 
