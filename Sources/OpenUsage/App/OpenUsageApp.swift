@@ -2,8 +2,10 @@ import AppKit
 
 @MainActor
 public final class AppDelegate: NSObject, NSApplicationDelegate {
+    private let processStartedAt = ProcessInfo.processInfo.systemUptime
     private var container: AppContainer?
     private var statusItemController: StatusItemController?
+    private var firstLaunchWindow: FirstLaunchWindowController?
     private var singleInstanceLock: SingleInstanceLock.Token?
     private let updater = UpdaterController()
 
@@ -49,9 +51,11 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         // install still presents an empty domain — how the migrator tells a first launch from an upgrade.
         // Nothing is wiped now; settings carry across updates. See `SettingsMigrator`.
         // The fresh-install answer is captured BEFORE migrating (the schema stamp makes the domain
-        // non-empty) and handed to `AppContainer`, whose `FirstRunSeeder` seeds a minimal provider set.
+        // non-empty) and handed to `AppContainer`, whose `FirstRunSeeder` starts with no providers on
+        // until the welcome screen turns on the user's picks.
         let isFreshInstall = SettingsMigrator.isFreshInstall()
         SettingsMigrator.migrate()
+        if isFreshInstall { FirstLaunchSetup.markPending() }
         // Let only the `SMAppService` login item drive startup: opt out of AppKit's reopen-on-login
         // so a reboot doesn't also restore us and race the login item in the first place. The lock
         // above resolves same-bundle startup races even if both launch triggers fire; this just avoids
@@ -85,9 +89,48 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func finishLaunching(isFreshInstall: Bool) async {
-        let container = await AppContainer(isFreshInstall: isFreshInstall)
+        let showsWelcome = FirstLaunchSetup.isPending()
+        // Nothing asks for Keychain access before the user picks providers on the welcome screen.
+        if showsWelcome { KeychainAccessGuard.holdPopups() }
+        // A first launch that quit before seeding still owes the empty seed, or the welcome would
+        // open with every provider on.
+        let container = await AppContainer(isFreshInstall: isFreshInstall || showsWelcome)
         self.container = container
+        guard showsWelcome else {
+            startDashboard(container)
+            return
+        }
+        let setup = FirstLaunchSetup(
+            providers: ProviderCatalog.make().map(\.provider),
+            cards: container.providers,
+            enablement: container.enablement,
+            dataStore: container.dataStore
+        )
+        // The hop lets the clicked button's action return before its window is torn down.
+        firstLaunchWindow = FirstLaunchWindowController(setup: setup) { [weak self] in
+            Task { self?.finishWelcome(container) }
+        }
+        firstLaunchWindow?.show()
+    }
+
+    private func finishWelcome(_ container: AppContainer) {
+        firstLaunchWindow?.finish()
+        firstLaunchWindow = nil
+        KeychainAccessGuard.allowPopups()
+        FirstLaunchSetup.clearPending()
+        // With nothing on, the empty dashboard already points to Customize.
+        if container.enablement.enabledIDs?.isEmpty == true {
+            container.onboarding.dismissCustomizeHint()
+        }
+        startDashboard(container)
+        MenuBarPopover.showHandler?()
+    }
+
+    private func startDashboard(_ container: AppContainer) {
+        container.startRefreshing()
         statusItemController = StatusItemController(container: container, updater: updater)
+        let launchDurationMS = Int((ProcessInfo.processInfo.systemUptime - processStartedAt) * 1_000)
+        AppLog.info(.lifecycle, "launch to status item ready: \(launchDurationMS) ms")
         // Starts background update checks (release build only; dormant under preview/`swift run`).
         updater.start()
         // Optional one-time setup entry point; ordinary launches never open a login window.
@@ -97,6 +140,11 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
                 Task { await container.dataStore.refresh(providerID: "opencodex", force: true) }
             }
         }
+    }
+
+    public func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        firstLaunchWindow?.show()
+        return true
     }
 
     /// Flush queued telemetry on quit. The SDK's lifecycle autocapture is off (we emit our own daily

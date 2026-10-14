@@ -72,6 +72,35 @@ final class OpenCodexReconciliationTests: XCTestCase {
         XCTAssertEqual(OpenCodexUsageReconciler.digest("thread"), "39200d1e8a8dbbb6d7bcea51e02b99f0")
     }
 
+    func testResumedParserPreservesChildIdentityAndTokenDeltasForReconciliation() throws {
+        let metadata = #"{"type":"session_meta","timestamp":"2026-10-06T12:00:00Z","payload":{"id":"child","source":{"subagent":{"thread_spawn":{"parent_thread_id":"thread"}}}}}"#
+        let start = #"{"type":"event_msg","timestamp":"2026-10-06T12:00:01Z","payload":{"type":"task_started","started_at":1791288001}}"#
+        let model = CodexLogFixture.turnContext(timestamp: "2026-10-06T12:09:00Z", model: "gpt-5.2")
+        let first = CodexLogFixture.tokenCount(timestamp: "2026-10-06T12:09:00Z",
+                                              totals: CodexLogFixture.usage(input: 100, output: 20))
+        var parser = CodexLogFileParser()
+        XCTAssertEqual(parser.parse(Data([metadata, start, model, first].joined(separator: "\n").utf8)).count, 1)
+
+        // Incremental reads persist this state across file appends and app launches.
+        let saved = try JSONEncoder().encode(parser.state)
+        let restored = try JSONDecoder().decode(CodexLogFileParser.ParseState.self, from: saved)
+        var resumed = CodexLogFileParser(state: restored)
+        let replay = #"{"type":"session_meta","payload":{"id":"thread"}}"#
+        let next = CodexLogFixture.tokenCount(timestamp: "2026-10-06T12:10:00Z",
+                                             totals: CodexLogFixture.usage(input: 200, output: 40))
+        let events = resumed.parse(Data([replay, next].joined(separator: "\n").utf8))
+        let parsed = try XCTUnwrap(events.first)
+        XCTAssertEqual(events.count, 1)
+        XCTAssertEqual(parsed.sessionID, "child")
+        XCTAssertEqual(parsed.parentSessionID, "thread")
+        XCTAssertEqual(parsed.input, 100)
+        XCTAssertEqual(parsed.output, 20)
+        let request = try XCTUnwrap(OpenCodexUsageReconciler.Request(row()))
+        let result = OpenCodexUsageReconciler.filter(events: events, requests: [request])
+        XCTAssertEqual(result.excluded, 1)
+        XCTAssertTrue(result.events.isEmpty)
+    }
+
     func testFailedRequestsAndInvalidUsageAreNotMatchEvidence() {
         var failed = row(); failed["status"] = 500
         XCTAssertNil(OpenCodexUsageReconciler.Request(failed))

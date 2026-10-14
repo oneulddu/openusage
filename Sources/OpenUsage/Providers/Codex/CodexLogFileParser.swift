@@ -8,22 +8,30 @@ struct CodexLogFileParser: Sendable {
     private static let taskStartedMarker = Data(#""type":"task_started""#.utf8)
     private static let threadSettingsMarker = Data(#""type":"thread_settings_applied""#.utf8)
 
-    private var previousTotals: CodexLogUsageScanner.RawUsage?
-    private var currentModel: String?
-    private var currentTierIsFast = false
-    private var currentTierIsUltrafast = false
-    private var sawSessionMeta = false
-    private var sessionID: String?
-    private var parentSessionID: String?
-    private var replayGate: ChildReplayGate?
+    struct ParseState: Codable, Sendable, Equatable {
+        var previousTotals: CodexLogUsageScanner.RawUsage?
+        var currentModel: String?
+        var currentTierIsFast = false
+        var currentTierIsUltrafast = false
+        var sawSessionMeta = false
+        var sessionID: String?
+        var parentSessionID: String?
+        var replayGate: ChildReplayGate?
+    }
+
+    var state: ParseState
+
+    init(state: ParseState = ParseState()) {
+        self.state = state
+    }
 
     mutating func parse(_ data: Data) -> [CodexLogUsageScanner.Event] {
         var events: [CodexLogUsageScanner.Event] = []
 
         for line in data.split(separator: UInt8(ascii: "\n")) {
             let isTurnContext = line.range(of: Self.turnContextMarker) != nil
-            let isSessionMeta = !sawSessionMeta && line.range(of: Self.sessionMetaMarker) != nil
-            let isTaskStarted = replayGate != nil && line.range(of: Self.taskStartedMarker) != nil
+            let isSessionMeta = !state.sawSessionMeta && line.range(of: Self.sessionMetaMarker) != nil
+            let isTaskStarted = state.replayGate != nil && line.range(of: Self.taskStartedMarker) != nil
             let isThreadSettings = line.range(of: Self.threadSettingsMarker) != nil
             guard isTurnContext || isSessionMeta || isTaskStarted || isThreadSettings
                 || line.range(of: Self.tokenCountMarker) != nil
@@ -35,25 +43,25 @@ struct CodexLogFileParser: Sendable {
 
             if type == "turn_context" {
                 if let model = payload.flatMap(Self.modelName(in:)) {
-                    currentModel = model
+                    state.currentModel = model
                 }
                 continue
             }
             // A child rollout also replays its parent's metadata; only its first metadata is its own.
-            if type == "session_meta", !sawSessionMeta {
-                sawSessionMeta = true
-                sessionID = payload?["id"] as? String
+            if type == "session_meta", !state.sawSessionMeta {
+                state.sawSessionMeta = true
+                state.sessionID = payload?["id"] as? String
                 let source = payload?["source"] as? [String: Any]
                 let subagent = source?["subagent"] as? [String: Any]
                 let spawn = subagent?["thread_spawn"] as? [String: Any]
-                parentSessionID = payload?["parent_thread_id"] as? String
+                state.parentSessionID = payload?["parent_thread_id"] as? String
                     ?? spawn?["parent_thread_id"] as? String
                 if let payload, CodexLogUsageScanner.isChildSessionMeta(payload) {
                     if let timestampRaw = (object["timestamp"] as? String)?.trimmingCharacters(in: .whitespaces),
                        let created = OpenUsageISO8601.date(from: timestampRaw) {
-                        replayGate = .untilStartedAt(created.timeIntervalSince1970.rounded(.down))
+                        state.replayGate = .untilStartedAt(created.timeIntervalSince1970.rounded(.down))
                     } else {
-                        replayGate = .untilSelfTimedTaskStarted
+                        state.replayGate = .untilSelfTimedTaskStarted
                     }
                 }
                 continue
@@ -61,8 +69,8 @@ struct CodexLogFileParser: Sendable {
             if isThreadSettings, type == "event_msg",
                payload?["type"] as? String == "thread_settings_applied" {
                 if let tier = Self.serviceTier(in: payload) {
-                    currentTierIsUltrafast = tier == "ultrafast"
-                    currentTierIsFast = tier == "fast" || tier == "priority"
+                    state.currentTierIsUltrafast = tier == "ultrafast"
+                    state.currentTierIsFast = tier == "fast" || tier == "priority"
                 }
                 continue
             }
@@ -70,10 +78,10 @@ struct CodexLogFileParser: Sendable {
 
             // Replayed task starts retain the parent's older start time; the first live turn opens the gate.
             if payload["type"] as? String == "task_started" {
-                if let gate = replayGate,
+                if let gate = state.replayGate,
                    let startedAt = payload["started_at"] as? NSNumber,
                    gate.isCleared(byStartedAt: startedAt.doubleValue, lineTimestamp: object["timestamp"] as? String) {
-                    replayGate = nil
+                    state.replayGate = nil
                 }
                 continue
             }
@@ -86,13 +94,13 @@ struct CodexLogFileParser: Sendable {
             let totals = (info?["total_token_usage"] as? [String: Any]).map(CodexLogUsageScanner.RawUsage.init(json:))
 
             // Parent history still seeds cumulative totals, but must never become chargeable child usage.
-            if replayGate != nil {
-                if let totals { previousTotals = totals }
+            if state.replayGate != nil {
+                if let totals { state.previousTotals = totals }
                 continue
             }
 
             // Codex can repeat a cumulative snapshot without recording another completed turn.
-            if let totals, let previous = previousTotals, totals.equalCounts(previous) {
+            if let totals, let previous = state.previousTotals, totals.equalCounts(previous) {
                 continue
             }
 
@@ -100,31 +108,29 @@ struct CodexLogFileParser: Sendable {
             if let last = (info?["last_token_usage"] as? [String: Any]).map(CodexLogUsageScanner.RawUsage.init(json:)) {
                 usage = last
             } else if let totals {
-                usage = totals.subtracting(previousTotals)
+                usage = totals.subtracting(state.previousTotals)
             } else {
                 continue
             }
-            if let totals { previousTotals = totals }
+            if let totals { state.previousTotals = totals }
             guard usage.input > 0 || usage.cached > 0 || usage.output > 0 || usage.reasoning > 0 else { continue }
 
             let parsedModel = Self.modelName(in: payload) ?? info.flatMap(Self.modelName(in:))
-            let model = CodexLogUsageScanner.resolveModel(parsed: parsedModel, currentModel: &currentModel)
+            let model = CodexLogUsageScanner.resolveModel(parsed: parsedModel, currentModel: &state.currentModel)
 
             events.append(CodexLogUsageScanner.Event(
                 timestamp: timestamp,
                 model: model,
-                pricingModel: model == "codex-auto-review"
-                    ? CodexLogUsageScanner.autoReviewFallback(at: timestampRaw)
-                    : model == "gpt-reserve" ? CodexLogUsageScanner.reservePricingModel : nil,
+                pricingModel: model == "gpt-reserve" ? CodexLogUsageScanner.reservePricingModel : nil,
                 input: usage.input,
                 cached: min(usage.cached, usage.input),
                 output: usage.output,
                 reasoning: usage.reasoning,
                 total: usage.total,
-                isFast: currentTierIsFast,
-                isUltrafast: currentTierIsUltrafast,
-                sessionID: sessionID,
-                parentSessionID: parentSessionID
+                isFast: state.currentTierIsFast,
+                isUltrafast: state.currentTierIsUltrafast,
+                sessionID: state.sessionID,
+                parentSessionID: state.parentSessionID
             ))
         }
         return events
@@ -150,7 +156,7 @@ struct CodexLogFileParser: Sendable {
         return nil
     }
 
-    private enum ChildReplayGate: Sendable {
+    enum ChildReplayGate: Codable, Sendable, Equatable {
         /// Open once a turn starts at or after the child session's own creation time.
         case untilStartedAt(TimeInterval)
         /// Without creation metadata, compare the turn's start to its own log-line timestamp.
