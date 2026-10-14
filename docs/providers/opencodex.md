@@ -83,6 +83,8 @@ priced locally; OpenCodex retains the hub's own estimate. Quotas and reset actio
 
 Original session files are never changed or copied. Only compact request metadata is kept in
 memory, with paginated reads and incremental refreshes; it is discarded when the app exits.
+Incremental Codex log reads retain the session and parent identity across appended chunks and
+cache restores, so confirmed hub requests are still matched after a restart.
 The first history scan may finish after the quota refresh and appear on the next refresh.
 Disabling the OpenCodex card hides its contribution to the total; it does not reassign confirmed
 hub requests to the native Codex card while the hub configuration remains present.
