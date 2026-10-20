@@ -37,6 +37,8 @@ final class L10nTests: XCTestCase {
         XCTAssertEqual(L10n.display("~338% over limit at reset"), "초기화 시 한도 약 338% 초과")
         XCTAssertEqual(L10n.display("Next update in 4m"), "4분 후 새로고침")
         XCTAssertEqual(L10n.display("Copy Cost Screenshot"), "비용 스크린샷 복사")
+        XCTAssertEqual(L10n.display("From your Mixdog usage ledger · Includes your model prices"),
+                       "Mixdog 사용량 원장 기준 · 입력한 모델 가격 포함")
         XCTAssertEqual(L10n.duration("12d 18h"), "12일 18시간")
         // Positional placeholders keep the English capture order.
         XCTAssertEqual(L10n.format("Total cost %@ across %@ providers", "$12.34", "3"), "총비용 $12.34, 서비스 3개")

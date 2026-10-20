@@ -81,6 +81,7 @@ enum ProviderCatalog {
             CopilotProvider(defaults: defaults),
             DevinProvider(),
             GrokProvider(),
+            MixdogProvider(),
             OllamaProvider(),
             OpenCodeProvider(),
             // A one-shot CLI has no browser application lifecycle. Only the menu-bar app hosts login.

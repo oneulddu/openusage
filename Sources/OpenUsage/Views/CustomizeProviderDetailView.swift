@@ -39,6 +39,9 @@ struct CustomizeProviderDetailView: View {
                         .map(\.id)
                         .filter { ProviderAccountID.family(of: $0) == "codex" })
                 }
+                if let mixdog = container.providers.first(where: { $0.provider.id == providerID }) as? MixdogProvider {
+                    MixdogPricingSection(provider: mixdog)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .animation(Motion.spring, value: layout.expandedMetricIDs)

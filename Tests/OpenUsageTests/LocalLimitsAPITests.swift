@@ -211,6 +211,7 @@ final class LocalLimitsAPITests: XCTestCase {
             "copilot": ["premiumCredits", "extraUsage", "orgCredits", "orgSpend", "chat", "completions"],
             "devin": ["daily", "weekly", "extraUsageBalance"],
             "grok": ["weekly"],
+            "mixdog": [],
             "ollama": ["session", "weekly", "monthly", "purchasedCredits"],
             "opencode": ["session", "weekly", "monthly"],
             "opencodex": ["codexSession", "codexWeekly", "claudeSession", "claudeWeekly",

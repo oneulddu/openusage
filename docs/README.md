@@ -31,6 +31,7 @@ What each provider tracks, where its credentials come from, and what to do when 
 - [Cursor](providers/cursor.md)
 - [Devin](providers/devin.md)
 - [Grok](providers/grok.md)
+- [Mixdog](providers/mixdog.md)
 - [Ollama](providers/ollama.md)
 - [OpenCode](providers/opencode.md)
 - [OpenCodex](providers/opencodex.md)
