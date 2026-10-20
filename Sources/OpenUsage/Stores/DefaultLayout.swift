@@ -41,6 +41,8 @@ enum DefaultLayout {
         "grok.weekly", "grok.trend",
         "grok.payAsYouGo", "grok.today", "grok.yesterday", "grok.last30",
 
+        "mixdog.trend", "mixdog.today", "mixdog.yesterday", "mixdog.last30",
+
         "ollama.session", "ollama.weekly", "ollama.monthly", "ollama.purchasedCredits",
 
         "opencode.session", "opencode.weekly", "opencode.monthly", "opencode.trend",
@@ -120,6 +122,8 @@ enum DefaultLayout {
         "copilot.orgCredits", "copilot.orgSpend", "copilot.chat", "copilot.completions",
         "devin.extra",
         "grok.payAsYouGo", "grok.today", "grok.yesterday", "grok.last30",
+        // Mixdog: Usage Trend stays above the fold; the spend tiles sit below the caret.
+        "mixdog.today", "mixdog.yesterday", "mixdog.last30",
         // Ollama: the plan meters stay above the fold; purchased credits sit below the caret.
         "ollama.purchasedCredits",
         // OpenCode: the three Go caps (Session/Weekly/Monthly) and Usage Trend stay above the fold —

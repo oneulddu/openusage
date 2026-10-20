@@ -192,6 +192,15 @@ extension OllamaUsageError: CategorizedError {
     }
 }
 
+extension MixdogUsageError: CategorizedError {
+    var errorCategory: ErrorCategory {
+        switch self {
+        case .notInstalled: .notLoggedIn
+        case .ledgerUnreadable: .credentialAccess
+        }
+    }
+}
+
 extension OpenCodeUsageError: CategorizedError {
     var errorCategory: ErrorCategory {
         switch self {

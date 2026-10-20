@@ -416,3 +416,18 @@
 "Choose Providers" = "서비스 선택";
 
 "Purchased Credits" = "구매한 크레딧";
+
+"From your Mixdog usage ledger" = "Mixdog 사용량 원장 기준";
+"Includes your model prices" = "입력한 모델 가격 포함";
+"Mixdog not detected. Use Mixdog on this Mac first." = "Mixdog를 찾지 못했어요. 먼저 이 Mac에서 Mixdog를 사용하세요.";
+"Couldn't read Mixdog's usage ledger. Refresh again, or check the permissions on ~/.mixdog/data/usage." = "Mixdog 사용량 원장을 읽지 못했어요. 다시 새로고침하거나 ~/.mixdog/data/usage 권한을 확인하세요.";
+"Model Prices" = "모델 가격";
+"Set prices per million tokens for models Mixdog couldn't price. They apply only to requests without a recorded cost." = "Mixdog가 가격을 정하지 못한 모델의 100만 토큰당 가격을 입력하세요. 비용이 기록되지 않은 요청에만 적용돼요.";
+"Every model in your Mixdog ledger has a recorded cost." = "Mixdog 원장의 모든 모델에 비용이 기록되어 있어요.";
+"Input" = "입력";
+"Output" = "출력";
+"Cache Read" = "캐시 읽기";
+"Cache Write" = "캐시 쓰기";
+"%@ price per million tokens" = "100만 토큰당 %@ 가격";
+"Couldn't read Mixdog's usage ledger." = "Mixdog 사용량 원장을 읽지 못했어요.";
+"Couldn't save the model price." = "모델 가격을 저장하지 못했어요.";

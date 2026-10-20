@@ -386,6 +386,7 @@ enum TotalSpendPalette {
         "codex": hex(0x10A37F),                              // OpenAI green (#10A37F)
         "cursor": dynamic(light: 0x13120A, dark: 0xF5F5F7),  // brand black (#13120A), flipped near-white in dark mode
         "grok": dynamic(light: 0x8E8E93, dark: 0x98989D),    // brand black, offset to gray next to Cursor
+        "mixdog": dynamic(light: 0x64748B, dark: 0x94A3B8),    // Mixdog titanium slate (logo gradient)
         "opencode": dynamic(light: 0x6E6E73, dark: 0xAEAEB2),  // OpenCode — grayscale brand, medium gray
         "openrouter": hex(0x6467F2),                         // OpenRouter indigo
         "antigravity": hex(0x4285F4),                        // Google blue
