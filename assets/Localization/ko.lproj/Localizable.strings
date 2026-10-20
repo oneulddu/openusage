@@ -89,6 +89,7 @@
 "Completions" = "자동 완성";
 "Premium" = "프리미엄";
 "Spark Weekly" = "Spark 주간";
+"Argon Weekly" = "Argon 주간";
 "Rate Limit Resets" = "한도 초기화권";
 "Daily quota" = "일간 할당량";
 "Weekly quota" = "주간 할당량";
@@ -307,6 +308,13 @@
 "Nothing to reset right now" = "지금은 초기화할 한도가 없어요";
 "Use this reset?" = "이 초기화권을 사용할까요?";
 "Immediately reset your usage limits. This can't be undone." = "사용 한도를 바로 초기화해요. 되돌릴 수 없어요.";
+"Refills your session limits now. This can't be undone." = "세션 한도를 바로 채워요. 되돌릴 수 없어요.";
+"Refills your weekly limits now. This can't be undone." = "주간 한도를 바로 채워요. 되돌릴 수 없어요.";
+"Refills your session and weekly limits now. This can't be undone." = "세션 한도와 주간 한도를 바로 채워요. 되돌릴 수 없어요.";
+"Your reset may still be going through. Check again in a minute." = "초기화가 아직 처리 중일 수 있어요. 1분 뒤 다시 확인하세요.";
+"Resets can't be used right now." = "지금은 초기화권을 사용할 수 없어요.";
+"Resets can't be used right now. Try again soon." = "지금은 초기화권을 사용할 수 없어요. 곧 다시 시도하세요.";
+"Resets can't be used right now. Try again in %@." = "지금은 초기화권을 사용할 수 없어요. %@ 후 다시 시도하세요.";
 "Resetting your usage…" = "사용량 초기화 중…";
 "Reset claimed. Enjoy!" = "초기화했어요!";
 "Your usage doesn't need a reset yet" = "아직 초기화할 필요가 없어요";

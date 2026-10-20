@@ -40,6 +40,8 @@ final class L10nTests: XCTestCase {
         XCTAssertEqual(L10n.display("From your Mixdog usage ledger · Includes your model prices"),
                        "Mixdog 사용량 원장 기준 · 입력한 모델 가격 포함")
         XCTAssertEqual(L10n.duration("12d 18h"), "12일 18시간")
+        XCTAssertEqual(L10n.display("Resets can't be used right now. Try again in 2d 6h."),
+                       "지금은 초기화권을 사용할 수 없어요. 2일 6시간 후 다시 시도하세요.")
         // Positional placeholders keep the English capture order.
         XCTAssertEqual(L10n.format("Total cost %@ across %@ providers", "$12.34", "3"), "총비용 $12.34, 서비스 3개")
         XCTAssertEqual(L10n.display("Total cost $12.34 across 3 providers"), "총비용 $12.34, 서비스 3개")
