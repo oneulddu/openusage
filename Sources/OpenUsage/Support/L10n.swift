@@ -99,6 +99,8 @@ enum L10n {
     }
 
     private static let rules: [Rule] = [
+        // Ahead of "Resets (.+)", which would otherwise swallow this sentence.
+        Rule("Resets can't be used right now\\. Try again in (.+)\\.", "Resets can't be used right now. Try again in %@."),
         Rule("Resets in (.+)", "Resets in %@"),
         Rule("Resets (.+)", "Resets %@"),
         Rule("Limit in (.+)", "Limit in %@"),
