@@ -112,23 +112,11 @@ actor ICloudUsageHistoryFileStore: UsageHistoryFileStoring {
         if let operationError { throw operationError }
     }
 
-    /// The app's iCloud container when the build carries one. Builds signed without the container
-    /// entitlement (personal, unprovisioned builds) fall back to the user's iCloud Drive folder, which a
-    /// non-sandboxed app can reach directly; Macs on the same iCloud account then share that folder.
-    static func syncRoot(
-        container: URL? = FileManager.default.url(forUbiquityContainerIdentifier: nil),
-        home: URL = FileManager.default.homeDirectoryForCurrentUser
-    ) throws -> URL {
-        if let container { return container }
-        let drive = home.appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs", isDirectory: true)
-        guard FileManager.default.fileExists(atPath: drive.path) else {
+    private func historyDirectory(create: Bool) throws -> URL {
+        guard let container = FileManager.default.url(forUbiquityContainerIdentifier: nil) else {
             throw ICloudUsageSyncError.unavailable
         }
-        return drive
-    }
-
-    private func historyDirectory(create: Bool) throws -> URL {
-        let directory = try Self.syncRoot()
+        let directory = container
             .appendingPathComponent("OpenUsage", isDirectory: true)
             .appendingPathComponent("History", isDirectory: true)
             .appendingPathComponent("v1", isDirectory: true)
