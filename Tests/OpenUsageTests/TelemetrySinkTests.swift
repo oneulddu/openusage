@@ -13,4 +13,11 @@ final class TelemetrySinkTests: XCTestCase {
             "crash autocapture must stay on when optional analytics are disabled"
         )
     }
+
+    /// This fork ships no PostHog token, so the sink stays inert and nothing reaches the upstream project.
+    func testForkBuildShipsNoTelemetryToken() throws {
+        try XCTSkipIf(ProcessInfo.processInfo.environment["OPENUSAGE_POSTHOG_TOKEN"] != nil,
+                      "a local telemetry override is set")
+        XCTAssertEqual(TelemetryConfig.token, TelemetryConfig.placeholderToken)
+    }
 }
