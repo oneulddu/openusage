@@ -8,62 +8,73 @@ struct MixdogUsageScan: Sendable {
 }
 
 /// Reads Mixdog's usage ledger (`~/.mixdog/data/usage/ledger.sqlite`) through its `events` view: one
-/// row per model request with the token buckets and the cost Mixdog recorded. Recorded costs are
-/// summed as-is; a row without one is priced from the user's model prices, or else excluded and
-/// flagged as an unknown model.
+/// row per model request with the token buckets and the cost Mixdog recorded. Ledgers mirrored from
+/// other machines (`MixdogPaths.remoteLedgerPaths`) are read the same way and counted together.
+/// Recorded costs are summed as-is; a row without one is priced from the user's model prices, or else
+/// excluded and flagged as an unknown model.
 ///
 /// A `Sendable` struct, `async` and nonisolated, so the SQLite reads run off the main actor when the
 /// `@MainActor` provider `await`s it.
 struct MixdogUsageScanner: Sendable {
     var sqlite: SQLiteAccessing
-    var ledgerPath: @Sendable () -> String
+    var ledgerPaths: @Sendable () -> [String]
     private let readFailureReporter: UsageLogReadFailureReporter
 
     init(
         sqlite: SQLiteAccessing = SQLiteCLIAccessor(),
-        ledgerPath: @escaping @Sendable () -> String = MixdogUsageScanner.defaultLedgerPath,
+        ledgerPaths: @escaping @Sendable () -> [String] = MixdogUsageScanner.defaultLedgerPaths,
         readFailureWarning: UsageLogReadFailureReporter.Warning? = nil
     ) {
         self.sqlite = sqlite
-        self.ledgerPath = ledgerPath
+        self.ledgerPaths = ledgerPaths
         self.readFailureReporter = UsageLogReadFailureReporter(
             logTag: LogTag.plugin("mixdog"),
             warning: readFailureWarning
         )
     }
 
-    static let defaultLedgerPath: @Sendable () -> String = {
-        MixdogPaths.ledgerPath(dataDirectory: MixdogPaths.dataDirectory(
+    static let defaultLedgerPaths: @Sendable () -> [String] = {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let local = MixdogPaths.ledgerPath(dataDirectory: MixdogPaths.dataDirectory(
             environment: ProcessEnvironmentReader(),
-            homeDirectory: FileManager.default.homeDirectoryForCurrentUser
+            homeDirectory: home
         ))
+        return [local] + MixdogPaths.remoteLedgerPaths(homeDirectory: home)
     }
 
-    /// Scan the last `daysBack` days. Returns `nil` only when there is no ledger at all; an empty
-    /// ledger yields an empty scan. Throws `ledgerUnreadable` when the ledger exists but can't be read.
+    /// Scan the last `daysBack` days across every ledger. Returns `nil` only when no ledger exists; an
+    /// empty ledger yields an empty scan. Throws `ledgerUnreadable` when any existing ledger can't be read.
     func scan(now: Date, prices: [String: MixdogModelPrice], daysBack: Int = 30) async throws -> MixdogUsageScan? {
-        let path = ledgerPath()
         // Same calendar bound the tiles/trend use, so morning rows on the oldest day aren't cut off.
         let tileSince = JSONLScanning.sinceDate(daysBack: daysBack, now: now)
         let cutoffMs = Int(tileSince.timeIntervalSince1970 * 1000)
 
-        let rows: [Row]
-        do {
-            // `json_group_array` always yields at least `[]`, so nil means the ledger file is absent.
-            guard let json = try sqlite.queryValue(path: path, sql: Self.dataSQL(cutoffMs: cutoffMs)) else {
-                await readFailureReporter.update(checkedPaths: [], failingPaths: [])
-                return nil
+        var rows: [Row] = []
+        var checkedPaths: Set<String> = []
+        var failures: [String: Error] = [:]
+        for path in ledgerPaths() {
+            do {
+                // `json_group_array` always yields at least `[]`, so nil means the ledger file is absent.
+                guard let json = try sqlite.queryValue(path: path, sql: Self.dataSQL(cutoffMs: cutoffMs)) else {
+                    continue
+                }
+                checkedPaths.insert(path)
+                rows += try Self.parseRows(json)
+            } catch {
+                checkedPaths.insert(path)
+                failures[path] = error
             }
-            rows = try Self.parseRows(json)
-            await readFailureReporter.update(checkedPaths: [path], failingPaths: [])
-        } catch {
-            // Edge-triggered so a persistently locked ledger warns once, not on every refresh.
-            let newlyFailing = await readFailureReporter.update(checkedPaths: [path], failingPaths: [path])
-            if !newlyFailing.isEmpty {
-                AppLog.warn(LogTag.plugin("mixdog"), "ledger query failed for \(path): \(error.localizedDescription)")
-            }
-            throw MixdogUsageError.ledgerUnreadable
         }
+        // Edge-triggered so a persistently locked ledger warns once, not on every refresh.
+        let newlyFailing = await readFailureReporter.update(
+            checkedPaths: checkedPaths, failingPaths: Set(failures.keys)
+        )
+        for path in newlyFailing.sorted() {
+            let message = failures[path]?.localizedDescription ?? "unknown error"
+            AppLog.warn(LogTag.plugin("mixdog"), "ledger query failed for \(path): \(message)")
+        }
+        guard failures.isEmpty else { throw MixdogUsageError.ledgerUnreadable }
+        guard !checkedPaths.isEmpty else { return nil }
 
         var accumulator = DailyUsageAccumulator()
         var usesCustomPrices = false
@@ -86,26 +97,33 @@ struct MixdogUsageScanner: Sendable {
         return MixdogUsageScan(logScan: accumulator.build(), usesCustomPrices: usesCustomPrices)
     }
 
-    /// Distinct models with at least one request Mixdog recorded without a cost — the ones a user price
-    /// can fill. Empty when the ledger is absent.
+    /// Distinct models with at least one request recorded without a cost in any ledger — the ones a
+    /// user price can fill. Empty when no ledger exists.
     func unpricedModels() throws -> [String] {
-        guard let json = try sqlite.queryValue(path: ledgerPath(), sql: Self.unpricedModelsSQL) else { return [] }
-        guard let data = json.data(using: .utf8),
-              let models = (try? JSONSerialization.jsonObject(with: data)) as? [Any]
-        else { throw MixdogUsageError.ledgerUnreadable }
-        return models.compactMap { ($0 as? String)?.nilIfEmpty }
+        var models: Set<String> = []
+        for path in ledgerPaths() {
+            guard let json = try sqlite.queryValue(path: path, sql: Self.unpricedModelsSQL) else { continue }
+            guard let data = json.data(using: .utf8),
+                  let parsed = (try? JSONSerialization.jsonObject(with: data)) as? [Any]
+            else { throw MixdogUsageError.ledgerUnreadable }
+            models.formUnion(parsed.compactMap { ($0 as? String)?.nilIfEmpty })
+        }
+        return models.sorted()
     }
 
-    /// Cheap local probe for `hasLocalCredentials()`: does the ledger hold at least one request?
+    /// Cheap local probe for `hasLocalCredentials()`: does any ledger hold at least one request?
     /// Read-only, no network. An unreadable ledger counts as a Mixdog footprint so `refresh()` gets to
     /// surface the real error.
     func hasUsage() -> Bool {
-        do {
-            return try sqlite.queryValue(path: ledgerPath(), sql: Self.probeSQL) != nil
-        } catch {
-            AppLog.warn(LogTag.plugin("mixdog"), "usage probe failed: \(error.localizedDescription)")
-            return true
+        for path in ledgerPaths() {
+            do {
+                if try sqlite.queryValue(path: path, sql: Self.probeSQL) != nil { return true }
+            } catch {
+                AppLog.warn(LogTag.plugin("mixdog"), "usage probe failed: \(error.localizedDescription)")
+                return true
+            }
         }
+        return false
     }
 
     // MARK: - Parsing

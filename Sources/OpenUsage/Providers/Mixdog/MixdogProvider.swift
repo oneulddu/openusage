@@ -32,8 +32,9 @@ final class MixdogProvider: ProviderRuntime {
     let modelPrices: @MainActor () -> [String: MixdogModelPrice]
     let now: @Sendable () -> Date
 
-    /// Names the local source on hover. The dollars are this Mac only; Mixdog prices subscription
-    /// usage at public API rates, so they are estimates rather than billed amounts.
+    /// Names the ledger source on hover. The dollars are this Mac's ledger plus any mirrored remote
+    /// ledgers; Mixdog prices subscription usage at public API rates, so they are estimates rather
+    /// than billed amounts.
     private let sourceNote = "From your Mixdog usage ledger"
     private let customPriceNote = "From your Mixdog usage ledger · Includes your model prices"
 

@@ -20,6 +20,20 @@ Use Mixdog as usual. OpenUsage reads Mixdog's usage ledger at `~/.mixdog/data/us
 (or under `$MIXDOG_DATA_DIR` if you've set it), read-only. There's no login and nothing to paste. The
 provider turns on automatically when that ledger holds at least one request.
 
+## Other machines
+
+Mixdog running somewhere OpenUsage can't, such as a Linux server, can be counted too. On one Mac, mirror
+that machine with `script/pull_mixdog_remote.sh <ssh-host> [name]`. It needs key-based SSH and
+`sqlite3` on the remote. The script aggregates the remote ledger's last 32 days into one row per day,
+model, and priced/unpriced bucket. It writes them to `~/.config/openusage/mixdog/remotes/<name>.sqlite`,
+replacing that file atomically each run. OpenUsage adds every `*.sqlite` file in that folder to this
+Mac's own ledger, so the remote usage appears in the same Mixdog card and Model Prices apply to it too.
+
+Run the script on a schedule, for example from a LaunchAgent with `StartInterval` 300. Mirror each
+machine from one Mac only; with iCloud Sync on, the other Macs receive it as part of that Mac's
+history. Days follow the remote machine's time zone. Deleting the mirror file removes that machine's
+usage at the next refresh.
+
 ## Costs and model prices
 
 The dollars are the cost Mixdog records for each request. For subscription logins (Claude, ChatGPT)

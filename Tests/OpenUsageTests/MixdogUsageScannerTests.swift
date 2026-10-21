@@ -9,7 +9,7 @@ final class MixdogUsageScannerTests: XCTestCase {
 
     private func scanner(_ sqlite: MixdogFakeSQLite) -> MixdogUsageScanner {
         let path = self.path
-        return MixdogUsageScanner(sqlite: sqlite, ledgerPath: { path }, readFailureWarning: { _ in })
+        return MixdogUsageScanner(sqlite: sqlite, ledgerPaths: { [path] }, readFailureWarning: { _ in })
     }
 
     private func totals(_ scan: MixdogUsageScan) -> (cost: Double, tokens: Int) {
@@ -101,6 +101,67 @@ final class MixdogUsageScannerTests: XCTestCase {
         XCTAssertTrue(scanner(MixdogFakeSQLite(failing: true)).hasUsage(), "an unreadable ledger is a Mixdog footprint")
     }
 
+    func testRemoteLedgersAreCountedWithTheLocalOne() async throws {
+        let local = "/md/usage/ledger.sqlite"
+        let remote = "/home/.config/openusage/mixdog/remotes/ubuntu.sqlite"
+        let sqlite = MixdogMultiLedgerSQLite(ledgers: [
+            local: "[" + mixdogRow("2026-07-12T11:00:00.000Z", "claude-opus-5-5", 10, 20, 0, 0, cost: "1.0") + "]",
+            // A remote mirror's per-day aggregate without a recorded cost is priced like a local row.
+            remote: "[" + [
+                mixdogRow("2026-07-12T03:00:00.000Z", "claude-opus-5-5", 100, 0, 0, 0, cost: "2.0"),
+                mixdogRow("2026-07-12T03:00:00.000Z", "deepseek-v4.1-flash", 1_000_000, 0, 0, 0, cost: "null")
+            ].joined(separator: ",") + "]"
+        ], unpriced: [remote: #"["deepseek-v4.1-flash"]"#])
+        let scanner = MixdogUsageScanner(
+            sqlite: sqlite, ledgerPaths: { [local, remote, "/missing/remote.sqlite"] }, readFailureWarning: { _ in }
+        )
+        let price = MixdogModelPrice(inputPerMillion: 0.5, outputPerMillion: 0, cacheReadPerMillion: 0, cacheWritePerMillion: 0)
+        let scan = try await XCTUnwrapAsync(await scanner.scan(now: now, prices: ["deepseek-v4.1-flash": price]))
+        let (cost, tokens) = totals(scan)
+        XCTAssertEqual(cost, 3.5, accuracy: 0.0001)
+        XCTAssertEqual(tokens, 1_000_130)
+        XCTAssertTrue(scan.usesCustomPrices)
+        XCTAssertEqual(try scanner.unpricedModels(), ["deepseek-v4.1-flash"])
+        XCTAssertTrue(scanner.hasUsage())
+    }
+
+    func testRemoteOnlyLedgerStillScansAndAnUnreadableRemoteFails() async throws {
+        let remote = "/r/ubuntu.sqlite"
+        let present = MixdogMultiLedgerSQLite(ledgers: [
+            remote: "[" + mixdogRow("2026-07-12T11:00:00.000Z", "claude-opus-5-5", 5, 5, 0, 0, cost: "0.5") + "]"
+        ])
+        let onlyRemote = MixdogUsageScanner(
+            sqlite: present, ledgerPaths: { ["/md/usage/ledger.sqlite", remote] }, readFailureWarning: { _ in }
+        )
+        let scan = try await XCTUnwrapAsync(await onlyRemote.scan(now: now, prices: [:]))
+        XCTAssertEqual(totals(scan).cost, 0.5, accuracy: 0.0001)
+
+        let broken = MixdogMultiLedgerSQLite(ledgers: ["/md/usage/ledger.sqlite": "[]"], failingPaths: [remote])
+        do {
+            _ = try await MixdogUsageScanner(
+                sqlite: broken, ledgerPaths: { ["/md/usage/ledger.sqlite", remote] }, readFailureWarning: { _ in }
+            ).scan(now: now, prices: [:])
+            XCTFail("expected ledgerUnreadable")
+        } catch {
+            XCTAssertEqual(error as? MixdogUsageError, .ledgerUnreadable)
+        }
+    }
+
+    func testRemoteLedgerPathsListVisibleSQLiteFilesInOrder() throws {
+        let home = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mixdog-remotes-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: home) }
+        XCTAssertEqual(MixdogPaths.remoteLedgerPaths(homeDirectory: home), [])
+
+        let directory = home.appendingPathComponent(".config/openusage/mixdog/remotes", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        for name in ["ubuntu.sqlite", "a-box.sqlite", ".ubuntu.tmp123", "notes.txt"] {
+            FileManager.default.createFile(atPath: directory.appendingPathComponent(name).path, contents: Data())
+        }
+        XCTAssertEqual(MixdogPaths.remoteLedgerPaths(homeDirectory: home),
+                       [directory.path + "/a-box.sqlite", directory.path + "/ubuntu.sqlite"])
+    }
+
     func testModelPriceRoundTripsThroughDefaults() throws {
         let defaults = UserDefaults(suiteName: "MixdogUsageScannerTests.\(UUID().uuidString)")!
         let price = MixdogModelPrice(inputPerMillion: 0.27, outputPerMillion: 1.1, cacheReadPerMillion: 0, cacheWritePerMillion: 0)
@@ -119,7 +180,7 @@ final class MixdogProviderTests: XCTestCase {
     private func provider(_ sqlite: MixdogFakeSQLite, prices: [String: MixdogModelPrice] = [:]) -> MixdogProvider {
         let now = self.now
         return MixdogProvider(
-            usageScanner: MixdogUsageScanner(sqlite: sqlite, ledgerPath: { "/md/usage/ledger.sqlite" },
+            usageScanner: MixdogUsageScanner(sqlite: sqlite, ledgerPaths: { ["/md/usage/ledger.sqlite"] },
                                              readFailureWarning: { _ in }),
             modelPrices: { prices },
             now: { now }
@@ -208,6 +269,30 @@ final class MixdogFakeSQLite: SQLiteAccessing, @unchecked Sendable {
         if sql == MixdogUsageScanner.probeSQL { return hasEvents ? "1" : nil }
         if sql == MixdogUsageScanner.unpricedModelsSQL { return unpriced }
         lastDataSQL = sql
+        return data
+    }
+
+    func execute(path: String, sql: String) throws {}
+}
+
+/// Stub for several ledgers at once: each path answers from its own data; absent paths model a missing
+/// file and `failingPaths` an unreadable one.
+final class MixdogMultiLedgerSQLite: SQLiteAccessing, @unchecked Sendable {
+    let ledgers: [String: String]
+    let unpriced: [String: String]
+    let failingPaths: Set<String>
+
+    init(ledgers: [String: String], unpriced: [String: String] = [:], failingPaths: Set<String> = []) {
+        self.ledgers = ledgers
+        self.unpriced = unpriced
+        self.failingPaths = failingPaths
+    }
+
+    func queryValue(path: String, sql: String) throws -> String? {
+        if failingPaths.contains(path) { throw SQLiteError.queryFailed("database is locked") }
+        guard let data = ledgers[path] else { return nil }
+        if sql == MixdogUsageScanner.probeSQL { return data == "[]" ? nil : "1" }
+        if sql == MixdogUsageScanner.unpricedModelsSQL { return unpriced[path] ?? "[]" }
         return data
     }
 
