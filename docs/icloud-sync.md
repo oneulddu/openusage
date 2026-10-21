@@ -6,6 +6,12 @@ iCloud account. A random device ID is kept in the login Keychain so the same Mac
 existing file after app preferences are reset or the app is reinstalled. There is no folder picker,
 pairing code, or separate account.
 
+Builds signed without the iCloud container (personal builds with no provisioning profile) use the
+`OpenUsage/History/v1` folder in the user's iCloud Drive instead. Every Mac on the same iCloud account
+must run such a build to share that folder, and macOS may ask once to allow access to iCloud Drive.
+That folder has no container change notifications, so other Macs' files are reread whenever this Mac
+writes its own, after each refresh batch.
+
 The file contains normalized daily tokens and spend, model totals, and unknown-model names for sources
 that are local to one Mac: Claude, Codex, Grok, Mixdog, and OpenCode. It also includes Claude and Codex account
 and organization or workspace identities when available, but never credentials, account limits,
