@@ -1,5 +1,9 @@
 # Privacy & Usage Data
 
+> **This fork sends no telemetry.** Its builds ship without a PostHog project token, so the daily active
+> ping, extra analytics, and crash reports described below are all off and the app makes no PostHog
+> requests. The rest of this page describes the upstream app.
+
 OpenUsage always sends an **anonymous daily active ping** and **anonymous crash reports** so we can
 count active users and fix app crashes. These are not optional.
 

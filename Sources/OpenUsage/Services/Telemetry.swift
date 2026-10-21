@@ -10,10 +10,10 @@ enum TelemetryConfig {
     /// the resolved token equals this. Do NOT change this value.
     static let placeholderToken = "phc_REPLACE_ME"
 
-    /// The project token baked into the build. Replace `phc_REPLACE_ME` with the real US-region
-    /// `phc_…` key (safe to commit — it's a client write-only key), or leave it and set
-    /// `OPENUSAGE_POSTHOG_TOKEN` at runtime for local testing.
-    private static let bakedToken = "phc_vGEqXEpQNwViyKnMNWvmKWpv8XxMT3yaeYi6gfidr4nf"
+    /// The project token baked into the build. This personal fork ships the placeholder, so its builds
+    /// never send daily activity, analytics, or crash reports to the upstream PostHog project. Set
+    /// `OPENUSAGE_POSTHOG_TOKEN` at runtime only to test telemetry locally.
+    private static let bakedToken = placeholderToken
 
     static var token: String {
         let env = ProcessInfo.processInfo.environment["OPENUSAGE_POSTHOG_TOKEN"]?
